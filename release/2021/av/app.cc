@@ -61,6 +61,10 @@ APP::APP() {
 
     sdram_data = (unsigned char*)malloc(64*1024*1024);
     for (int i = 0; i < 64*1024*1024; i++) sdram_data[i] = 0x55 ^ i;
+
+    config();
+    assign();
+    window("AVR emulator");
 }
 
 void APP::window(const char* caption) {
