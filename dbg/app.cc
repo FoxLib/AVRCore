@@ -395,7 +395,7 @@ void AVRDBG::interruptcall() {
     flag_to_byte();
     last_timer = timer;
     push16(pc >> 1);
-    pc = 2; // AVR8K
+    pc = 4;             // AVR64K
 }
 
 // Исполнение шага процессора
@@ -835,7 +835,6 @@ void AVRDBG::instrmask() {
     // Определить опкоды для быстрого исполнения
     for (i = 0; i < 91; i++) mask(opcode_mask[i].name, opcode_mask[i].code);
 }
-
 
 // ---------------------------------------------------------------------
 // ДИЗАССЕМБЛЕР

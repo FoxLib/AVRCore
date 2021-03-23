@@ -7,7 +7,7 @@ int main() {
     app.ds_update();
 
     while (app.poll()) {
-        // .
+
     }
 
     return 0;
