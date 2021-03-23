@@ -44,101 +44,105 @@ void AVRDBG::create(int w, int h) {
 int AVRDBG::get_key_ascii(SDL_Event event) {
 
     /* Получение ссылки на структуру с данными о нажатой клавише */
-    SDL_KeyboardEvent * eventkey = & event.key;
+    SDL_KeyboardEvent* eventkey = & event.key;
 
     int xt = 0;
     int k = eventkey->keysym.scancode;
 
     switch (k) {
 
-        /* A */ case 0x26: xt = 0x41; break;
-        /* B */ case 0x38: xt = 0x42; break;
-        /* C */ case 0x36: xt = 0x43; break;
-        /* D */ case 0x28: xt = 0x44; break;
-        /* E */ case 0x1a: xt = 0x45; break;
-        /* F */ case 0x29: xt = 0x46; break;
-        /* G */ case 0x2a: xt = 0x47; break;
-        /* H */ case 0x2b: xt = 0x48; break;
-        /* I */ case 0x1f: xt = 0x49; break;
-        /* J */ case 0x2c: xt = 0x4A; break;
-        /* K */ case 0x2d: xt = 0x4B; break;
-        /* L */ case 0x2e: xt = 0x4C; break;
-        /* M */ case 0x3a: xt = 0x4D; break;
-        /* N */ case 0x39: xt = 0x4E; break;
-        /* O */ case 0x20: xt = 0x4F; break;
-        /* P */ case 0x21: xt = 0x50; break;
-        /* Q */ case 0x18: xt = 0x51; break;
-        /* R */ case 0x1b: xt = 0x52; break;
-        /* S */ case 0x27: xt = 0x53; break;
-        /* T */ case 0x1c: xt = 0x54; break;
-        /* U */ case 0x1e: xt = 0x55; break;
-        /* V */ case 0x37: xt = 0x56; break;
-        /* W */ case 0x19: xt = 0x57; break;
-        /* X */ case 0x35: xt = 0x58; break;
-        /* Y */ case 0x1d: xt = 0x59; break;
-        /* Z */ case 0x34: xt = 0x5A; break;
+        // Текстовые
+        case SDL_SCANCODE_A: xt = 'A'; break;
+        case SDL_SCANCODE_B: xt = 'B'; break;
+        case SDL_SCANCODE_C: xt = 'C'; break;
+        case SDL_SCANCODE_D: xt = 'D'; break;
+        case SDL_SCANCODE_E: xt = 'E'; break;
+        case SDL_SCANCODE_F: xt = 'F'; break;
+        case SDL_SCANCODE_G: xt = 'G'; break;
+        case SDL_SCANCODE_H: xt = 'H'; break;
+        case SDL_SCANCODE_I: xt = 'I'; break;
+        case SDL_SCANCODE_J: xt = 'J'; break;
+        case SDL_SCANCODE_K: xt = 'K'; break;
+        case SDL_SCANCODE_L: xt = 'L'; break;
+        case SDL_SCANCODE_M: xt = 'M'; break;
+        case SDL_SCANCODE_N: xt = 'N'; break;
+        case SDL_SCANCODE_O: xt = 'O'; break;
+        case SDL_SCANCODE_P: xt = 'P'; break;
+        case SDL_SCANCODE_Q: xt = 'Q'; break;
+        case SDL_SCANCODE_R: xt = 'R'; break;
+        case SDL_SCANCODE_S: xt = 'S'; break;
+        case SDL_SCANCODE_T: xt = 'T'; break;
+        case SDL_SCANCODE_U: xt = 'U'; break;
+        case SDL_SCANCODE_V: xt = 'V'; break;
+        case SDL_SCANCODE_W: xt = 'W'; break;
+        case SDL_SCANCODE_X: xt = 'X'; break;
+        case SDL_SCANCODE_Y: xt = 'Y'; break;
+        case SDL_SCANCODE_Z: xt = 'Z'; break;
 
-        /* 0 */ case 0x13: xt = 0x30; break;
-        /* 1 */ case 0x0A: xt = 0x31; break;
-        /* 2 */ case 0x0B: xt = 0x32; break;
-        /* 3 */ case 0x0C: xt = 0x33; break;
-        /* 4 */ case 0x0D: xt = 0x34; break;
-        /* 5 */ case 0x0E: xt = 0x35; break;
-        /* 6 */ case 0x0F: xt = 0x36; break;
-        /* 7 */ case 0x10: xt = 0x37; break;
-        /* 8 */ case 0x11: xt = 0x38; break;
-        /* 9 */ case 0x12: xt = 0x39; break;
+        // Цифровые
+        case SDL_SCANCODE_0: xt = '0'; break;
+        case SDL_SCANCODE_1: xt = '1'; break;
+        case SDL_SCANCODE_2: xt = '2'; break;
+        case SDL_SCANCODE_3: xt = '3'; break;
+        case SDL_SCANCODE_4: xt = '4'; break;
+        case SDL_SCANCODE_5: xt = '5'; break;
+        case SDL_SCANCODE_6: xt = '6'; break;
+        case SDL_SCANCODE_7: xt = '7'; break;
+        case SDL_SCANCODE_8: xt = '8'; break;
+        case SDL_SCANCODE_9: xt = '9'; break;
 
-        /* ` */ case 0x31: xt = 0x60; break;
-        /* - */ case 0x14: xt = 0x2D; break;
-        /* = */ case 0x15: xt = 0x3D; break;
-        /* \ */ case 0x33: xt = 0x5C; break;
-        /* [ */ case 0x22: xt = 0x5B; break;
-        /* ] */ case 0x23: xt = 0x5D; break;
-        /* ; */ case 0x2f: xt = 0x3B; break;
-        /* ' */ case 0x30: xt = 0x27; break;
-        /* , */ case 0x3b: xt = 0x2C; break;
-        /* . */ case 0x3c: xt = 0x2E; break;
-        /* / */ case 0x3d: xt = 0x2F; break;
+        // Знаки
+        case SDL_SCANCODE_GRAVE:        xt = 0x60; break; /* ` */
+        case SDL_SCANCODE_MINUS:        xt = 0x2D; break; /* - */
+        case SDL_SCANCODE_EQUALS:       xt = 0x3D; break; /* = */
+        case SDL_SCANCODE_BACKSLASH:    xt = 0x5C; break; /* \ */
+        case SDL_SCANCODE_LEFTBRACKET:  xt = 0x5B; break; /* [ */
+        case SDL_SCANCODE_RIGHTBRACKET: xt = 0x5D; break; /* ] */
+        case SDL_SCANCODE_SEMICOLON:    xt = 0x3B; break; /* ; */
+        case SDL_SCANCODE_APOSTROPHE:   xt = 0x27; break; /* ' */
+        case SDL_SCANCODE_COMMA:        xt = 0x2C; break; /* , */
+        case SDL_SCANCODE_PERIOD:       xt = 0x2E; break; /* . */
+        case SDL_SCANCODE_SLASH:        xt = 0x2F; break; /* / */
 
-        /* F1  */ case 67: xt = key_F1; break;
-        /* F2  */ case 68: xt = key_F2; break;
-        /* F3  */ case 69: xt = key_F3; break;
-        /* F4  */ case 70: xt = key_F4; break;
-        /* F5  */ case 71: xt = key_F5; break;
-        /* F6  */ case 72: xt = key_F6; break;
-        /* F7  */ case 73: xt = key_F7; break;
-        /* F8  */ case 74: xt = key_F8; break;
-        /* F9  */ case 75: xt = key_F9; break;
-        /* F10 */ case 76: xt = key_F10; break;
-        /* F11 */ case 95: xt = key_F11; break;
-        /* F12 */ case 96: xt = key_F12; break;
+        // Функциональные клавиши
+        case SDL_SCANCODE_F1: xt = key_F1; break;
+        case SDL_SCANCODE_F2: xt = key_F2; break;
+        case SDL_SCANCODE_F3: xt = key_F3; break;
+        case SDL_SCANCODE_F4: xt = key_F4; break;
+        case SDL_SCANCODE_F5: xt = key_F5; break;
+        case SDL_SCANCODE_F6: xt = key_F6; break;
+        case SDL_SCANCODE_F7: xt = key_F7; break;
+        case SDL_SCANCODE_F8: xt = key_F8; break;
+        case SDL_SCANCODE_F9: xt = key_F9; break;
+        case SDL_SCANCODE_F10: xt = key_F10; break;
+        case SDL_SCANCODE_F11: xt = key_F11; break;
+        case SDL_SCANCODE_F12: xt = key_F12; break;
 
-        /* bs */ case 0x16: xt = key_BS; break;     // Back Space
-        /* sp */ case 0x41: xt = 0x20; break;       // Space
-        /* tb */ case 0x17: xt = key_TAB; break;    // Tab
-        /* ls */ case 0x32: xt = key_LSHIFT; break; // Left Shift
-        /* lc */ case 0x25: xt = key_LALT;  break;  // Left Ctrl
-        /* la */ case 0x40: xt = key_LCTRL; break;  // Left Alt
-        /* en */ case 0x24: xt = key_ENTER; break;  // Enter
-        /* es */ case 0x09: xt = key_ESC; break;    // Escape
-        /* es */ case 0x08: xt = key_ESC; break;
+        // Управление вводом
+        case SDL_SCANCODE_BACKSPACE: xt = key_BS; break;     // Back Space
+        case SDL_SCANCODE_SPACE:     xt = 0x20; break;       // Space
+        case SDL_SCANCODE_TAB:       xt = key_TAB; break;    // Tab
+        case SDL_SCANCODE_LSHIFT:    xt = key_LSHIFT; break; // Left Shift
+        case SDL_SCANCODE_LCTRL:     xt = key_LALT;  break;  // Left Ctrl
+        case SDL_SCANCODE_LALT:      xt = key_LCTRL; break;  // Left Alt
+        case SDL_SCANCODE_RETURN:    xt = key_ENTER; break;  // Enter
+        case SDL_SCANCODE_ESCAPE:    xt = key_ESC; break;    // Escape
 
         // ---------------------------------------------
         // Специальные (не так же как в реальном железе)
         // ---------------------------------------------
 
-        /* UP  */  case 0x6F: xt = key_UP; break;
-        /* RT  */  case 0x72: xt = key_RT; break;
-        /* DN  */  case 0x74: xt = key_DN; break;
-        /* LF  */  case 0x71: xt = key_LF; break;
-        /* Home */ case 0x6E: xt = key_HOME; break;
-        /* End  */ case 0x73: xt = key_END; break;
-        /* PgUp */ case 0x70: xt = key_PGUP; break;
-        /* PgDn */ case 0x75: xt = key_PGDN; break;
-        /* Del  */ case 0x77: xt = key_DEL; break;
-        /* Ins  */ case 0x76: xt = key_INS; break;
-        /* NLock*/ case 0x4D: xt = key_NL; break;
+        case SDL_SCANCODE_UP:       xt = key_UP; break;
+        case SDL_SCANCODE_RIGHT:    xt = key_RT; break;
+        case SDL_SCANCODE_DOWN:     xt = key_DN; break;
+        case SDL_SCANCODE_LEFT:     xt = key_LF; break;
+        case SDL_SCANCODE_HOME:     xt = key_HOME; break;
+        case SDL_SCANCODE_END:      xt = key_END; break;
+        case SDL_SCANCODE_PAGEUP:   xt = key_PGUP; break;
+        case SDL_SCANCODE_PAGEDOWN: xt = key_PGDN; break;
+        case SDL_SCANCODE_DELETE:   xt = key_DEL; break;
+        case SDL_SCANCODE_INSERT:   xt = key_INS; break;
+        case SDL_SCANCODE_NUMLOCKCLEAR: xt = key_NL; break;
 
         default: return -k;
     }
@@ -175,7 +179,7 @@ int AVRDBG::poll() {
                 case SDL_KEYUP:
 
                     event_cause |= event_keyup;
-                    access_key_up = get_key_ascii(event) | 0x80;
+                    access_key_up = get_key_ascii(event);
                     break;
 
                 case SDL_MOUSEMOTION:

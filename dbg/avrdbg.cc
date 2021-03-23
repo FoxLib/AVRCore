@@ -8,6 +8,16 @@ int main() {
 
     while (app.poll()) {
 
+        if (app.indebug()) {
+
+            if (int k = app.keydown()) {
+
+
+                printf("%c[%x] ", k, k);
+
+            }
+        }
+
     }
 
     return 0;
