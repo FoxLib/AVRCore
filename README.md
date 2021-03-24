@@ -1,14 +1,16 @@
 # AVRCore
-Здесь складываются процессоры на основе AVR технологии
 
-# Составные части
+Здесь складываются процессоры на основе AVR технологии. Версии
+складываются в папку release
 
-* `dbg` - Специально разработанный отладчик для AVR
-* `de0` - Проект для DE0
-* `mc3` - Проект для Marsohod 2 Cyclone III
+# Составные части каждого релиза
+
+* `av` - Отладчик для AVR
 * `apps` - Приложения для запуска
-* `core` - Ядро на verilog
 * `include` - Включаемые модули для apps/
+* `machine` - Ядро на Verilog и TestBench
+* `machine/de0` - Проект для DE0
+* `machine/mc3` - Проект для Marsohod 2 Cyclone III
 
 # Схема памяти ATMEGA328
 ```
@@ -22,7 +24,7 @@
 28 PORTC PIND DDD    PORTD  ...  ...   ...    ...
 38 ...   ...  ...    PCIFR  EIFR EIMSK GPIOR0 EECR
 48 OCR0B ...  GPIOR1 GPIOR2 SPCR SPSR  SPDR   ...
-58 ...   ...  ...    ...    ...  SPL   SPH    SREG
+58 ...   ...  ...    RAMPZ  ...  SPL   SPH    SREG
 ```
 
 # Схема памяти 46К

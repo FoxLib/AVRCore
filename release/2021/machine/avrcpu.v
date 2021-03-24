@@ -56,6 +56,9 @@ always @* begin
         // Регистры
         16'b0000_0000_000x_xxxx: din = r[ address[4:0] ];
 
+        // Встроенный таймер
+        // @todo timer_ms
+
         // Процессор
         16'h005B: din = rampz;
         16'h005D: din = sp[ 7:0];
@@ -144,7 +147,7 @@ alu UnitALU
 // ---------------------------------------------------------------------
 
 reg [14:0] timer_divider = 0;
-reg [23:0] timer_ms      = 0;
+reg [15:0] timer_ms      = 0;
 
 // Отсчет таймера в миллисекундах
 always @(posedge clock) begin
