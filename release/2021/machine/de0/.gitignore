@@ -2,6 +2,7 @@ db
 incremental_db
 simulation
 timing
+greybox_tmp
 *.jdi
 *.pof
 *.sld
@@ -18,17 +19,7 @@ timing
 *.qqq
 *.jic
 *.map
-*.qqq
 .qsys_edit
-greybox_tmp
 undo_redo.txt
 PLLJ_PLLSPE_INFO.txt
 c5_pin_model_dump.txt
-*.bin
-*.elf
-*.o
-*.lst
-sd.img
-avr.hex
-flash.mif
-disk
