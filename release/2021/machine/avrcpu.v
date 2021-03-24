@@ -78,23 +78,21 @@ reg [ 7:0]  r[32];                      // Регистры
 reg [ 1:0]  tstate  = 0;                // Машинное состояние
 reg [15:0]  latch   = 0;                // Записанный опкод
 reg [15:0]  pclatch = 0;                // Для LPM / SPM
-reg [15:0]  sp      = 16'hEFFF;         // Stack Pointer
+reg [15:0]  sp      = 16'h1FFF;         // Stack Pointer 8k
 reg [ 7:0]  sreg    = 8'b0000_0000;     // Status Register
 reg [ 4:0]  alu     = 0;                // Режим работы АЛУ
 
 // Команды на обратном фронте
-reg         reg_w   = 0;                // Писать регистр
-reg [ 4:0]  reg_id  = 0;                // В какой регистр писать
+reg         reg_w   = 0;                // Писать в регистр
 reg         sreg_w  = 0;                // Писать в SREG из АЛУ
+reg [ 4:0]  reg_id  = 0;                // В какой регистр писать
 reg [ 1:0]  sp_mth  = 0;                // Увеличение или уменьшение стека
-reg         aread   = 0;                // Признак чтения из памяти
-reg         kbit    = 0;                // Прочитал ли бит KBHIT
 
 // 16 битные регистры
 reg         reg_ww  = 0;                // Писать в X,Y,Z
 reg         reg_ws  = 0;                // =1 Источник АЛУ; =0 Источник регистр `wb2`
 reg [ 1:0]  reg_idw = 0;                // Номер 16-битного регистра
-reg [15:0]  wb2     = 0;                // Что писать в X,Y,Z
+reg [15:0]  wb2     = 0;                // Данные для записи в X,Y,Z
 reg [ 7:0]  rampz   = 0;                // Верхняя память для E-функции
 
 // Провода
@@ -115,6 +113,7 @@ wire [ 4:0] rdi = {1'b1, opcode[7:4]};
 wire [ 4:0] rri = {1'b1, opcode[3:0]};
 wire [ 7:0] K   = {opcode[11:8], opcode[3:0]};
 
+// Управление счетчиком
 reg         skip_instr = 0;
 wire [15:0] pcnext  = pc + 1;
 wire [15:0] pcnext2 = pc + 2;
@@ -124,19 +123,20 @@ wire        is_call = {opcode[14], opcode[3:1]} == 4'b0111;
 // Арифметико-логическое устройство
 // ---------------------------------------------------------------------
 
-reg  [ 7:0] op1;
-reg  [ 7:0] op2;
-wire [ 7:0] alu_res;
-wire [ 7:0] alu_sreg;
-reg  [15:0] op1w;
-wire [15:0] resw;
+reg  [ 7:0] op1;      reg  [ 7:0] op2;
+wire [ 7:0] alu_res;  wire [ 7:0] alu_sreg;
+reg  [15:0] op1w;     wire [15:0] resw;
 
 alu UnitALU
 (
-    alu,
-    op1, op2, sreg,
-    alu_res, alu_sreg,
-    op1w, resw
+    .mode (alu),
+    .d    (op1),
+    .r    (op2),
+    .s    (sreg),
+    .R    (alu_res),
+    .S    (alu_sreg),
+    .op1w (op1w),
+    .resw (resw)
 );
 
 // ---------------------------------------------------------------------
@@ -169,7 +169,6 @@ always @(posedge clock)
 begin
 
     wren   <= 1'b0;
-    aread  <= 1'b0;
     reg_w  <= 1'b0;
     sreg_w <= 1'b0;
     sp_mth <= 1'b0; // Ничего не делать с SP
@@ -396,8 +395,6 @@ begin
                 pc[15:8] <= din;
                 address  <= sp + 1;
                 sp_mth   <= `SPINC;
-                kbit     <= din[0];
-                aread    <= 1'b1;
 
             end
 
@@ -409,8 +406,6 @@ begin
                 alu      <= 11;
                 op2      <= {sreg[7] | opcode[4], sreg[6:0]};
                 sreg_w   <= 1;
-                kbit     <= din[0];
-                aread    <= 1'b1;
 
             end
 
@@ -458,8 +453,6 @@ begin
                 op2     <= din;
                 reg_w   <= 1;
                 reg_id  <= rd;
-                kbit    <= din[0];
-                aread   <= 1'b1;
 
             end
 
@@ -489,8 +482,6 @@ begin
                 op2     <= din;
                 reg_w   <= 1;
                 reg_id  <= rd;
-                kbit    <= din[0];
-                aread   <= 1'b1;
 
             end
 
@@ -635,8 +626,6 @@ begin
                 op2     <= din;
                 reg_id  <= rd;
                 reg_w   <= 1;
-                kbit    <= din[0];
-                aread   <= 1'b1;
 
             end
 
@@ -669,8 +658,6 @@ begin
             1: begin
 
                 tstate  <= 0;
-                kbit    <= din[0];
-                aread   <= 1'b1;
                 pc      <= pcnext;
 
                 if (din[ opcode[2:0] ] == opcode[9])
@@ -720,8 +707,6 @@ begin
                 alu    <= 0;
                 reg_w  <= 1;
                 op2    <= din;
-                kbit   <= din[0];
-                aread  <= 1'b1;
 
             end
 
@@ -782,8 +767,6 @@ begin
                 op2     <= din;
                 reg_id  <= rd;
                 reg_w   <= 1;
-                kbit    <= din[0];
-                aread   <= 1'b1;
 
             end
 
@@ -828,8 +811,6 @@ begin
             1: begin
 
                 tstate <= 0;
-                kbit   <= din[0];
-                aread  <= 1'b1;
                 wren   <= 1;
 
                 case (opcode[2:0])
