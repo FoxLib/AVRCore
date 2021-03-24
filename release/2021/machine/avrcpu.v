@@ -1,4 +1,4 @@
-module cpu
+module avrcpu
 (
     input  wire        clock,
 
@@ -8,63 +8,25 @@ module cpu
 
     // Оперативная память
     output reg  [15:0] address,     // Указатель на память RAM (sram)
-    input  wire [ 7:0] din_raw,     // memory[ address ]
-    output reg  [ 7:0] wb,          // Запись в память по address
-    output reg         w,           // Разрешение записи в память
-    output reg  [ 7:0] bank,        // Банк памяти
-    output reg  [ 1:0] vmode,       // Видеорежим
-
-    // Ввод-вывод
-    input  wire [ 7:0] kb_ch,       // Клавиатура
-    input  wire        kb_tr,       // Триггер внешний
-    output wire        kb_hit,
-
-    // Положение курсора
-    output reg  [ 7:0] cursor_x,
-    output reg  [ 7:0] cursor_y,
-
-    // Мышь
-    input  wire [ 8:0] mouse_x,
-    input  wire [ 7:0] mouse_y,
-    input  wire [ 1:0] mouse_cmd,
-
-    // SPI
-    output reg         spi_sent,     // =1 Сообщение отослано на spi
-    output reg  [ 1:0] spi_cmd,     // Команда
-    input  wire [ 7:0] spi_din,     // Принятое сообщение
-    output reg  [ 7:0] spi_out,     // Сообщение на отправку
-    input  wire [ 1:0] spi_st,      // bit 1: timeout (1); bit 0: busy
-
-    // SDRAM
-    output reg  [31:0] sdram_address,
-    input  wire [ 7:0] sdram_i_data,
-    output reg  [ 7:0] sdram_o_data,
-    input  wire [ 7:0] sdram_status,
-    output reg  [ 7:0] sdram_control
+    input  wire [ 7:0] data_i,      // = memory[ address ]
+    output reg  [ 7:0] data_o,      // Запись в память по address
+    output reg         wren         // Разрешение записи в память
 );
 
 initial begin
 
-    pc = 0; address = 0; wb = 0; w = 0; vmode = 0;
+    address = 0;
+    pc      = 0;
+    wren    = 0;
+    data_o  = 0;
 
-    sdram_address = 0;
-    sdram_control = 0;
-    sdram_o_data  = 0;
-
-    cursor_x = 0;
-    cursor_y = 0;
-    spi_cmd  = 0;
-    spi_out  = 0;
-    spi_sent = 0;
-    bank     = 0;
-
-    // Low
+    // Регистры 0-15
     r[0] = 8'h00; r[4] = 8'h00; r[8]  = 8'h00; r[12] = 8'h01;
     r[1] = 8'h00; r[5] = 8'h00; r[9]  = 8'h00; r[13] = 8'h00;
     r[2] = 8'h00; r[6] = 8'h00; r[10] = 8'h00; r[14] = 8'h00;
     r[3] = 8'h00; r[7] = 8'h00; r[11] = 8'h00; r[15] = 8'h00;
 
-    // High
+    // Регистры 16-31
     r[16] = 8'h00; r[20] = 8'h00; r[24] = 8'h00; r[28] = 8'h00;
     r[17] = 8'h00; r[21] = 8'h00; r[25] = 8'h00; r[29] = 8'h00;
     r[18] = 8'h00; r[22] = 8'h00; r[26] = 8'h00; r[30] = 8'h05;
@@ -72,6 +34,7 @@ initial begin
 
 end
 
+// Отладочные провода
 wire [7:0] _r1 = r[16];
 wire [7:0] _r2 = r[17];
 wire [7:0] _r3 = r[14];
@@ -81,7 +44,7 @@ wire [7:0] _r4 = r[15];
 `define SPINC 2
 
 // ---------------------------------------------------------------------
-// Проксирование памяти DIN
+// Проксирование памяти
 // ---------------------------------------------------------------------
 
 reg [7:0] din;
@@ -93,49 +56,14 @@ always @* begin
         // Регистры
         16'b0000_0000_000x_xxxx: din = r[ address[4:0] ];
 
-        // Банки
-        16'h0020: din = bank;
-        16'h0021: din = 8'h00;
-
-        // Клавиатура
-        16'h0022: din = kb_ch;
-        16'h0023: din = {7'h0, kb_hit};
-
-        // Курсор
-        16'h0024: din = cursor_x;
-        16'h0025: din = cursor_y;
-
-        // Таймер
-        16'h0026: din = timer_ms[ 7:0];
-        16'h0027: din = timer_ms[15:8];
-        16'h002F: din = timer_ms[23:16];
-
-        // SPI
-        16'h0028: din = spi_din;
-        16'h0029: din = spi_st;
-
-        // Мышь
-        16'h002A: din = mouse_x[7:0];
-        16'h002B: din = mouse_y[7:0];
-        16'h002C: din = {6'h0, mouse_cmd[1:0]};
-        16'h002E: din = {7'h0, mouse_x[8]};
-
         // Процессор
         16'h005B: din = rampz;
         16'h005D: din = sp[ 7:0];
         16'h005E: din = sp[15:8];
         16'h005F: din = sreg;
 
-        // SDRAM
-        16'h0030: din = sdram_address[ 7:0];
-        16'h0031: din = sdram_address[15:8];
-        16'h0032: din = sdram_address[23:16];
-        16'h0033: din = sdram_address[31:24];
-        16'h0034: din = sdram_i_data;
-        16'h0035: din = sdram_status;
-
         // Память
-        default:  din = din_raw;
+        default:  din = data_i;
 
     endcase
 
@@ -153,8 +81,6 @@ reg [15:0]  pclatch = 0;                // Для LPM / SPM
 reg [15:0]  sp      = 16'hEFFF;         // Stack Pointer
 reg [ 7:0]  sreg    = 8'b0000_0000;     // Status Register
 reg [ 4:0]  alu     = 0;                // Режим работы АЛУ
-reg         locked  = 1'b0;             // Блокировать процессор, пока SPI занят
-reg         spi_proc = 0;               // Процессор сейчас работает с SPI
 
 // Команды на обратном фронте
 reg         reg_w   = 0;                // Писать регистр
@@ -194,11 +120,10 @@ wire [15:0] pcnext  = pc + 1;
 wire [15:0] pcnext2 = pc + 2;
 wire        is_call = {opcode[14], opcode[3:1]} == 4'b0111;
 
-// Текущий статус
-assign      kb_hit      = kb_trigger ^ kb_tr;
-reg         kb_trigger  = 1'b0;
-
+// ---------------------------------------------------------------------
 // Арифметико-логическое устройство
+// ---------------------------------------------------------------------
+
 reg  [ 7:0] op1;
 reg  [ 7:0] op2;
 wire [ 7:0] alu_res;
@@ -214,7 +139,10 @@ alu UnitALU
     op1w, resw
 );
 
-// Таймер
+// ---------------------------------------------------------------------
+// Таймер для работы прерываний
+// ---------------------------------------------------------------------
+
 reg [14:0] timer_divider = 0;
 reg [23:0] timer_ms      = 0;
 
@@ -233,11 +161,14 @@ reg        intr_trigger = 0;
 reg [ 7:0] intr_maxtime = 0; // Выключен
 reg [ 7:0] intr_timer   = 0;
 
-// Исполнительное устройство
-always @(posedge clock) begin
-if (!locked) begin
+// ---------------------------------------------------------------------
+// Главное исполнительное устройство
+// ---------------------------------------------------------------------
 
-    w      <= 1'b0;
+always @(posedge clock)
+begin
+
+    wren   <= 1'b0;
     aread  <= 1'b0;
     reg_w  <= 1'b0;
     sreg_w <= 1'b0;
@@ -266,7 +197,6 @@ if (!locked) begin
 
     // Вызов прерывания таймера
     // -----------------------------------------------------------------
-    // Таймер вызван
     else if (intr_trigger) begin
 
         case (tstate)
@@ -276,8 +206,8 @@ if (!locked) begin
 
                 tstate  <= 1;
                 address <= sp;
-                wb      <= pc[7:0];
-                w       <= 1'b1;
+                data_o  <= pc[7:0];
+                wren    <= 1'b1;
                 sp_mth  <= `SPDEC;
 
             end
@@ -287,8 +217,8 @@ if (!locked) begin
 
                 tstate  <= 0;
                 address <= sp;
-                wb      <= pcnext[15:8];
-                w       <= 1'b1;
+                data_o  <= pcnext[15:8];
+                wren    <= 1'b1;
                 sp_mth  <= `SPDEC;
                 pc      <= 2;           // ISR(INT0_vect)
                 intr_trigger <= 0;      // Переход к обычному исполнению
@@ -355,8 +285,8 @@ if (!locked) begin
             alu     <= opcode[13:10];
             op1     <= r[rd];
             op2     <= r[rr];
-            // CP, CPС не писать
             reg_id  <= rd;
+            // CP, CPС не писать
             reg_w   <= (opcode[13:10] != 4'b0001 && opcode[13:10] != 4'b0101);
             sreg_w  <= 1'b1;
 
@@ -421,8 +351,8 @@ if (!locked) begin
 
                 tstate  <= 1;
                 address <= sp;
-                wb      <= is_call ? pcnext2[7:0] : pcnext[7:0];
-                w       <= 1'b1;
+                data_o  <= is_call ? pcnext2[7:0] : pcnext[7:0];
+                wren    <= 1'b1;
                 sp_mth  <= `SPDEC;
                 pc      <= pcnext;
 
@@ -433,14 +363,14 @@ if (!locked) begin
 
                 tstate  <= 0;
                 address <= sp;
-                wb      <= is_call ? pcnext[15:8] : pc[15:8];
-                w       <= 1'b1;
+                data_o  <= is_call ? pcnext[15:8] : pc[15:8];
+                wren    <= 1'b1;
                 sp_mth  <= `SPDEC;
 
                 // Метод вызова
-                pc      <= is_call     ? ir : // CALL
-                           opcode[14]  ? (pc + {{4{opcode[11]}}, opcode[11:0]}) : // RCALL
-                                         Z;   // ICALL
+                /* CALL */       if (is_call)    pc <= ir;
+                /* RCALL */ else if (opcode[14]) pc <= (pc + {{4{opcode[11]}}, opcode[11:0]});
+                /* ICALL */ else                 pc <= Z;
 
             end
 
@@ -502,8 +432,8 @@ if (!locked) begin
 
                 tstate <= opcode[9] ? 0 : 1;
                 pc     <= pcnext;
-                wb     <= r[rd];
-                w      <= opcode[9];
+                data_o <= r[rd];
+                wren   <= opcode[9];
 
                 // Выбор адреса
                 case (opcode[3:0])
@@ -546,8 +476,8 @@ if (!locked) begin
                 tstate  <= opcode[9] ? 0 : 1;
                 pc      <= pcnext;
                 address <= (opcode[3] ? Y : Z) + q;
-                wb      <= r[rd];
-                w       <= opcode[9];
+                data_o  <= r[rd];
+                wren    <= opcode[9];
 
             end
 
@@ -679,7 +609,6 @@ if (!locked) begin
 
             end
 
-
         endcase
 
         // [2T] IN  Rd, A
@@ -692,8 +621,8 @@ if (!locked) begin
 
                 tstate  <= opcode[11] ? 0 : 1;
                 pc      <= pcnext;
-                wb      <= r[rd];
-                w       <= opcode[11];
+                data_o  <= r[rd];
+                wren    <= opcode[11];
                 address <= {opcode[10:9], opcode[3:0]} + 16'h20;
 
             end
@@ -779,20 +708,20 @@ if (!locked) begin
                 pc      <= pcnext;
                 reg_id  <= rd;
                 address <= ir;
-                wb      <= r[rd];
-                w       <= opcode[9];
+                data_o  <= r[rd];
+                wren    <= opcode[9];
 
             end
 
             // Запись в регистр
             2: begin
 
-                tstate  <= 0;
-                alu     <= 0;
-                reg_w   <= 1;
-                op2     <= din;
-                kbit    <= din[0];
-                aread   <= 1'b1;
+                tstate <= 0;
+                alu    <= 0;
+                reg_w  <= 1;
+                op2    <= din;
+                kbit   <= din[0];
+                aread  <= 1'b1;
 
             end
 
@@ -824,8 +753,8 @@ if (!locked) begin
         16'b1001_001x_xxxx_1111: begin
 
             pc      <= pcnext;
-            wb      <= r[rd];
-            w       <= 1;
+            data_o  <= r[rd];
+            wren    <= 1;
             address <= sp;
             sp_mth  <= `SPDEC;
 
@@ -898,21 +827,22 @@ if (!locked) begin
             // Запись в порт
             1: begin
 
-                tstate  <= 0;
-                kbit    <= din[0];
-                aread   <= 1'b1;
+                tstate <= 0;
+                kbit   <= din[0];
+                aread  <= 1'b1;
+                wren   <= 1;
 
                 case (opcode[2:0])
-                    0: wb <= {din[7:1], opcode[9]};
-                    1: wb <= {din[7:2], opcode[9], din[0]};
-                    2: wb <= {din[7:3], opcode[9], din[1:0]};
-                    3: wb <= {din[7:4], opcode[9], din[2:0]};
-                    4: wb <= {din[7:5], opcode[9], din[3:0]};
-                    5: wb <= {din[7:6], opcode[9], din[4:0]};
-                    6: wb <= {din[  7], opcode[9], din[5:0]};
-                    7: wb <= {          opcode[9], din[6:0]};
+                    0: data_o <= {din[7:1], opcode[9]};
+                    1: data_o <= {din[7:2], opcode[9], din[0]};
+                    2: data_o <= {din[7:3], opcode[9], din[1:0]};
+                    3: data_o <= {din[7:4], opcode[9], din[2:0]};
+                    4: data_o <= {din[7:5], opcode[9], din[3:0]};
+                    5: data_o <= {din[7:6], opcode[9], din[4:0]};
+                    6: data_o <= {din[  7], opcode[9], din[5:0]};
+                    7: data_o <= {          opcode[9], din[6:0]};
                 endcase
-                w <= 1;
+
 
             end
 
@@ -921,110 +851,306 @@ if (!locked) begin
     endcase
 
 end
-end
 
 // Запись в регистры
 always @(negedge clock) begin
 
-    // Блокировка процессора на время I/O
-    if (!locked) begin
+    if (reg_w) r[ reg_id ] <= alu_res;
+    if (sreg_w) sreg <= alu_sreg;
 
-        if (reg_w) r[ reg_id ] <= alu_res;
-        if (sreg_w) sreg <= alu_sreg;
+    // Икремент или декремент
+    case (sp_mth)
 
-        // Икремент или декремент
-        case (sp_mth)
+        `SPDEC: sp <= sp - 1;
+        `SPINC: sp <= sp + 1;
 
-            `SPDEC: sp <= sp - 1;
-            `SPINC: sp <= sp + 1;
+    endcase
+
+    // Автоинкремент или декремент X,Y,Z
+    if (reg_ww) begin
+
+        case (reg_idw)
+
+            0: {r[25], r[24]} <= reg_ws ? resw : wb2; // W
+            1: {r[27], r[26]} <= reg_ws ? resw : wb2; // X
+            2: {r[29], r[28]} <= reg_ws ? resw : wb2; // Y
+            3: {r[31], r[30]} <= reg_ws ? resw : wb2; // Z
 
         endcase
 
-        // Автоинкремент или декремент X,Y,Z
-        if (reg_ww) begin
+    end
 
-            case (reg_idw)
+    // Запись в порты или регистры
+    if (wren) begin
 
-                0: {r[25], r[24]} <= reg_ws ? resw : wb2; // W
-                1: {r[27], r[26]} <= reg_ws ? resw : wb2; // X
-                2: {r[29], r[28]} <= reg_ws ? resw : wb2; // Y
-                3: {r[31], r[30]} <= reg_ws ? resw : wb2; // Z
+        case (address)
 
+            // Системные регистры
+            16'h005B: rampz     <= data_o; // Верхняя память ROM
+            16'h005D: sp[ 7:0]  <= data_o; // SPL
+            16'h005E: sp[15:8]  <= data_o; // SPH
+            16'h005F: sreg      <= data_o; // SREG
+
+            // Запись в регистры как в память
+            default:  if (address < 16'h20) r[ address[4:0] ] <= data_o;
+
+        endcase
+
+    end
+
+end
+
+endmodule
+
+// Режим работы АЛУ
+// ---------------------------------------------------------------------
+// 0 LDI    9  EOR      11 LSR
+// 1 CPC    A  OR       12 ROR
+// 2 SBC    B  <SREG>   13 DEC
+// 3 ADD    C  COM      14 ADIW
+// 5 CP     D  NEG      15 SBIW
+// 6 SUB    E  SWAP
+// 7 ADC    F  INC
+// 8 AND    10 ASR
+// ---------------------------------------------------------------------
+
+module alu(
+
+    // Ввод
+    input wire [4:0]  mode,         // режим
+    input wire [7:0]  d,            // dst
+    input wire [7:0]  r,            // src
+    input wire [7:0]  s,            // входящий s
+
+    // Вывод
+    output reg [7:0]  R,            // результат
+    output reg [7:0]  S,            // s (новый)
+
+    // 16 bit
+    input wire [15:0] op1w,
+    output reg [15:0] resw
+);
+
+// Вычисления
+wire [7:0] sub = d - r;
+wire [7:0] add = d + r;
+wire [8:0] sbc = d - r - s[0];
+wire [7:0] adc = d + r + s[0];
+wire [7:0] lsr = {1'b0, d[7:1]};
+wire [7:0] ror = {s[0], d[7:1]};
+wire [7:0] asr = {d[7], d[7:1]};
+wire [7:0] neg = -d;
+wire [7:0] inc = d + 1;
+wire [7:0] dec = d - 1;
+wire [7:0] com = d ^ 8'hFF;
+wire [7:0] swap = {d[3:0], d[7:4]};
+reg        carry;
+
+// 16 битные вычисления
+wire [15:0] adiw = op1w + r;
+wire [15:0] sbiw = op1w - r;
+
+// Флаги переполнения после сложения и вычитания
+wire add_flag_v = (d[7] &  r[7] & !R[7]) | (!d[7] & !r[7] & R[7]);
+wire sub_flag_v = (d[7] & !r[7] & !R[7]) | (!d[7] &  r[7] & R[7]);
+wire neg_flag_v = R == 8'h80;
+
+// Флаги половинного переполнения после сложения и вычитания
+wire add_flag_h = ( d[3] & r[3]) | (r[3] & !R[3]) | (!R[3] &  d[3]);
+wire sub_flag_h = (!d[3] & r[3]) | (r[3] &  R[3]) | ( R[3] & !d[3]);
+wire neg_flag_h = d[3] | (d[3] & R[3]) | R[3];
+
+// Флаги ADIW, SBIW
+wire adiw_v = !op1w[15] & resw[15];
+wire adiw_c = !resw[15] & op1w[15];
+
+// Логические флаги
+wire [7:0] set_logic_flag = {
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ s[5],
+    /* s */ R[7],
+    /* v */ 1'b0,
+    /* n */ R[7],
+    /* z */ R[7:0] == 0,
+    /* c */ s[0]
+};
+
+// Флаги после вычитания с переносом
+wire [7:0] set_subcarry_flag = {
+
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ sub_flag_h,
+    /* s */ sub_flag_v ^ R[7],
+    /* v */ sub_flag_v,
+    /* n */ R[7],
+    /* z */ (R[7:0] == 0) & s[1],
+    /* c */ sbc[8]
+};
+
+// Флаги после вычитания
+wire [7:0] set_subtract_flag = {
+
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ sub_flag_h,
+    /* s */ sub_flag_v ^ R[7],
+    /* v */ sub_flag_v,
+    /* n */ R[7],
+    /* z */ (R[7:0] == 0),
+    /* c */ d < r
+};
+
+// Флаги после COM
+wire [7:0] set_com_flag = {
+
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ s[5],
+    /* s */ R[7],
+    /* v */ 1'b0,
+    /* n */ R[7],
+    /* z */ (R[7:0] == 0),
+    /* c */ 1'b1
+};
+
+// Флаги после NEG
+wire [7:0] set_neg_flag = {
+
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ neg_flag_h,
+    /* s */ neg_flag_v ^ R[7],
+    /* v */ neg_flag_v,
+    /* n */ R[7],
+    /* z */ (R[7:0] == 0),
+    /* c */ d != 0
+};
+
+// Флаги после сложения с переносом
+wire [7:0] set_add_flag = {
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ add_flag_h,
+    /* s */ add_flag_v ^ R[7],
+    /* v */ add_flag_v,
+    /* n */ R[7],
+    /* z */ (R[7:0] == 0),
+    /* c */ d + r + carry >= 9'h100
+};
+
+// Флаги после логической операции сдвига вправо
+wire [7:0] set_lsr_flag = {
+
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ s[5],
+    /* s */ d[0],
+    /* v */ R[7] ^ d[0],
+    /* n */ R[7],
+    /* z */ (R[7:0] == 0),
+    /* c */ d[0]
+};
+
+// Флаги после INC
+wire [7:0] set_inc_flag = {
+
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ s[5],
+    /* s */ (R == 8'h80) ^ R[7],
+    /* v */ (R == 8'h80),
+    /* n */ R[7],
+    /* z */ (R[7:0] == 0),
+    /* c */ s[0]
+};
+
+// Флаги после DEC
+wire [7:0] set_dec_flag = {
+
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ s[5],
+    /* s */ (R == 8'h7F) ^ R[7],
+    /* v */ (R == 8'h7F),
+    /* n */ R[7],
+    /* z */ (R[7:0] == 0),
+    /* c */ s[0]
+};
+
+// Флаги после ADIW
+wire [7:0] set_adiw_flag = {
+
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ s[5],
+    /* s */ adiw_v ^ resw[15],
+    /* v */ adiw_v,
+    /* n */ resw[15],
+    /* z */ (resw[15:0] == 0),
+    /* c */ adiw_c
+};
+
+// Флаги после SBIW
+wire [7:0] set_sbiw_flag = {
+
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ s[5],
+    /* s */ adiw_v ^ resw[15],
+    /* v */ adiw_v,
+    /* n */ resw[15],
+    /* z */ (resw[15:0] == 0),
+    /* c */ adiw_v
+};
+
+always @(*) begin
+
+    S = s;
+    carry = 0;
+
+    case (mode)
+
+        /* LDI  */ 0:  begin R = r; end
+        /* CPC  */ 1:  begin R = sbc[7:0]; S = set_subcarry_flag; end
+        /* SBC  */ 2:  begin R = sbc[7:0]; S = set_subcarry_flag; end
+        /* ADD  */ 3:  begin R = add;      S = set_add_flag;      carry = 0; end
+        /* CP   */ 5:  begin R = sub;      S = set_subtract_flag; end
+        /* SUB  */ 6:  begin R = sub;      S = set_subtract_flag; end
+        /* ADC  */ 7:  begin R = adc;      S = set_add_flag;      carry = s[0]; end
+        /* AND  */ 8:  begin R = d & r;    S = set_logic_flag; end
+        /* EOR  */ 9:  begin R = d ^ r;    S = set_logic_flag; end
+        /* OR   */ 10: begin R = d | r;    S = set_logic_flag; end
+        /* SREG */ 11: begin S = r;        end
+        /* COM  */ 12: begin R = com;      S = set_com_flag; end
+        /* NEG  */ 13: begin R = neg;      S = set_neg_flag; end
+        /* SWAP */ 14: begin R = swap;     end
+        /* INC  */ 15: begin R = inc;      S = set_inc_flag; end
+        /* ASR  */ 16: begin R = asr;      S = set_lsr_flag; end
+        /* LSR  */ 17: begin R = lsr;      S = set_lsr_flag; end
+        /* ROR  */ 18: begin R = ror;      S = set_lsr_flag; end
+        /* DEC  */ 19: begin R = dec;      S = set_dec_flag; end
+        /* ADIW */ 20: begin resw = adiw;  S = set_adiw_flag; end
+        /* SBIW */ 21: begin resw = sbiw;  S = set_sbiw_flag; end
+        /* BLD  */ 22: begin
+
+            case (r[2:0])
+                0: R = {d[7:1], s[6]};
+                1: R = {d[7:2], s[6], d[0]};
+                2: R = {d[7:3], s[6], d[1:0]};
+                3: R = {d[7:4], s[6], d[2:0]};
+                4: R = {d[7:5], s[6], d[3:0]};
+                5: R = {d[7:6], s[6], d[4:0]};
+                6: R = {d[  7], s[6], d[5:0]};
+                7: R = {        s[6], d[6:0]};
             endcase
 
         end
 
-        // Запись в порты или регистры
-        if (w) begin
+        default: R = 8'hFF;
 
-            case (address)
-
-                // Управление памятью, курсором, SPI
-                16'h0020: bank     <= wb; // memory.bank (4kb) $F000
-                16'h0024: cursor_x <= wb; // text.cursor.x
-                16'h0025: cursor_y <= wb; // text.cursor.y
-                16'h0028: spi_out  <= wb; // spi.data
-
-                // Запуск триггера активации команды SPI
-                16'h0029: begin
-
-                    spi_cmd  <= wb[1:0];
-                    spi_sent <= 1'b1;
-                    locked   <= 1'b1;
-
-                end
-
-                16'h002D: vmode <= wb; // Видеорежим
-
-                // SDRAM
-                16'h0030: sdram_address[ 7:0]  <= wb;
-                16'h0031: sdram_address[15:8]  <= wb;
-                16'h0032: sdram_address[23:16] <= wb;
-                16'h0033: sdram_address[31:24] <= wb;
-                16'h0034: sdram_o_data         <= wb;
-                16'h0035: sdram_control        <= wb;
-
-                // Таймер прерывания
-                16'h0036: intr_maxtime <= wb;
-
-                // Системные регистры
-                16'h005B: rampz     <= wb; // Верхняя память ROM
-                16'h005D: sp[ 7:0]  <= wb; // SPL
-                16'h005E: sp[15:8]  <= wb; // SPH
-                16'h005F: sreg      <= wb; // SREG
-
-                // Запись в регистры как в память
-                default:
-
-                    if (address < 16'h20) r[ address[4:0] ] <= wb;
-
-            endcase
-
-        end
-
-        // Тест на чтение из порта
-        if (aread) begin
-
-            // Сбросить бит 0 в порту 23h. Реагировать только если бит был реально прочитан!
-            if (address == 16'h0023 && kbit) kb_trigger <= kb_trigger ^ kb_hit;
-
-        end
-
-    end
-
-    // -----------------------------------------------------------------
-    // Разблокировка процессора при BUSY=0
-    if (spi_proc && spi_st[0] == 1'b0) begin
-        locked   <= 0;
-        spi_proc <= 0;
-    end
-
-    // Сброс SENT, если устройство SPI начало работу
-    if (spi_sent && spi_st[0]) begin
-        spi_sent <= 1'b0;
-        spi_proc <= 1'b1;
-    end
-    // -----------------------------------------------------------------
+    endcase
 
 end
 
