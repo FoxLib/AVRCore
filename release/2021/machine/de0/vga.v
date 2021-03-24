@@ -1,15 +1,23 @@
 module vga
 (
-    input   wire        CLOCK,        
+    input   wire        CLOCK,
     output  reg  [3:0]  VGA_R,
     output  reg  [3:0]  VGA_G,
     output  reg  [3:0]  VGA_B,
     output  wire        VGA_HS,
-    output  wire        VGA_VS
+    output  wire        VGA_VS,
+
+    // Текущее положение курсора
+    input   wire [7:0]  cursor_x,
+    input   wire [7:0]  cursor_y,
+
+    // Доступ к текстовой видеопамяти 8k
+    output  reg [12:0]  text_address,
+    input   wire [7:0]  text_data
 );
-       
+
 // ---------------------------------------------------------------------
-    
+
 // Тайминги для горизонтальной развертки
 parameter hz_visible = 640;
 parameter hz_front   = 16;
@@ -36,19 +44,85 @@ reg  [10:0] y    = 0;
 wire [10:0] X    = x - hz_back; // X=[0..639]
 wire [ 9:0] Y    = y - vt_back; // Y=[0..399]
 
+// Вычисление позиции курсора, его наличие.
+wire       cursor   = ((cursor_x + 1 == X[9:3]) && (cursor_y == Y[9:4])) && (Y[3:0] >= 14);
+
+// Рендеринг шрифта
+wire        cubit = font_data[ 3'h7 ^ X[2:0] ];
+wire [11:0] color = cubit ^ (cursor & flash) ? cl_fore : cl_back;
+
+// Символ для рисования
+reg         flash;
+reg  [ 7:0] text_char;
+reg  [ 7:0] text_attr;
+reg  [11:0] cl_fore_;  reg  [11:0] cl_fore;
+reg  [11:0] cl_back_;  reg  [11:0] cl_back;
+reg  [ 7:0] font_data;
+
 always @(posedge CLOCK) begin
 
     // Кадровая развертка
     x <= xmax ?         0 : x + 1;
     y <= xmax ? (ymax ? 0 : y + 1) : y;
 
+    // Текстовый режим
+    case (X[2:0])
+
+        // Запрос на символ
+        3'b000: begin text_address   <= 2*(X[9:3] + 80*Y[9:4]); end
+
+        // Прочитать символ, запрос на атрибут
+        3'b001: begin text_address   <= {text_address[11:1], 1'b1};
+                      text_char      <= text_data; end
+
+        // Прочитать атрибут, запрос на FORECOLOR
+        3'b010: begin text_address   <= {12'hFA0 + 2*text_data[3:0]};
+                      text_attr      <= text_data; end
+
+        // Прочитать FC[7:0], добавить +1
+        3'b011: begin text_address   <= {text_address[11:1], 1'b1};
+                      cl_fore_[7:0]  <= text_data; end
+
+        // Прочитать FC[11:8], запрос BACKCOLOR
+        3'b100: begin text_address   <= {12'hFA0 + 2*text_attr[7:4]};
+                      cl_fore_[11:8] <= text_data[3:0]; end
+
+        // Прочитать BC[7:0], добавить +1
+        3'b101: begin text_address   <= {text_address[11:1], 1'b1};
+                      cl_back_[7:0]  <= text_data; end
+
+        // Прочитать BC[11:8], запрос знакоместа
+        3'b110: begin text_address   <= {text_char, Y[3:0]};
+                      cl_back_[11:8] <= text_data[3:0]; end
+
+        // Прочитать знакоместо, триггер для отрисовки
+        3'b111: begin font_data <= text_data;
+                      cl_fore   <= cl_fore_;
+                      cl_back   <= cl_back_; end
+
+    endcase
+
     // Вывод окна видеоадаптера
     if (x >= hz_back && x < hz_visible + hz_back &&
         y >= vt_back && y < vt_visible + vt_back)
     begin
-         {VGA_R, VGA_G, VGA_B} <= X[3:0] == 0 || Y[3:0] == 0 ? 12'hFFF : {X[4]^Y[4], 3'h0, X[5]^Y[5], 3'h0, X[6]^Y[6], 3'h0};
+         {VGA_R, VGA_G, VGA_B} <= color;
     end
     else {VGA_R, VGA_G, VGA_B} <= 12'b0;
+
+end
+
+// ---------------------------------------------------------------------
+// Мерцающий курсор
+// ---------------------------------------------------------------------
+reg [23:0]  clock;
+wire        clock_tick = (clock == 6250000);
+
+// Таймер, 0.5 с
+always @(posedge CLOCK) begin
+
+    flash <= clock_tick ? ~flash : flash;
+    clock <= clock_tick ? 1'b0   : clock + 1;
 
 end
 

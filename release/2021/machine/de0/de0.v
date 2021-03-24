@@ -129,13 +129,27 @@ memflash UnitMemFlash
     .q_a       (ir),
 );
 
-// 8k   Видеопамять текстового режима
+// 8k Видеопамять текстового режима
+memtext UnitMemtext
+(
+    .clock     (clock),
+    // .address_a (address_a),
+    .address_b (text_address),
+    // .q_a       (q_a),
+    .q_b       (text_data),
+    // .data_a    (data_a),
+    // .wren_a    (wren_a),
+);
+
 // 128k Видеопамять графического режима
 // 32k  Дополнительная память
 
 // ---------------------------------------------------------------------
 // Видеоадаптер
 // ---------------------------------------------------------------------
+
+wire [12:0] text_address;
+wire [ 7:0] text_data;
 
 vga unit_vga
 (
@@ -144,7 +158,15 @@ vga unit_vga
     .VGA_G  (VGA_G),
     .VGA_B  (VGA_B),
     .VGA_HS (VGA_HS),
-    .VGA_VS (VGA_VS)
+    .VGA_VS (VGA_VS),
+
+    // Доступ к памяти
+    .text_address (text_address),
+    .text_data    (text_data)
+
+    // Курсор
+    // input   wire [7:0]  cursor_x,
+    // input   wire [7:0]  cursor_y,
 );
 
 endmodule
