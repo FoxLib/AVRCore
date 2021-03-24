@@ -138,6 +138,7 @@ protected:
     unsigned char spi_st;
     unsigned char spi_status;
     unsigned char spi_command;
+    unsigned char spi_prev_cmd;
     unsigned long spi_arg;
     unsigned long spi_lba;
     unsigned char spi_crc;
