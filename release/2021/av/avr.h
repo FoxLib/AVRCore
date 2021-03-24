@@ -1,5 +1,4 @@
 #include "SDL.h"
-#include "ansi3.h"
 #include "ansi16.h"
 #include <stdlib.h>
 #include <stdio.h>

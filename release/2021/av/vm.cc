@@ -156,6 +156,8 @@ void APP::main() {
 
     while (1) {
 
+        int do_frame_event = 0;
+
         while (SDL_PollEvent(& event)) {
 
             switch (event.type) {
@@ -392,63 +394,69 @@ void APP::main() {
                 // @TODO Вызывается по таймеру
                 case SDL_USEREVENT: {
 
-                    timer = (timer + 20);
-                    require_disp_update = 0;
-
-                    flash_id++;
-                    if (flash_id > 10) { flash_id = 0; flash ^= 1; require_disp_update = 1; }
-
-                    // Если запрошена остановка
-                    if (require_halt) {
-
-                        cpu_halt = 1;
-                        ds_debugger = 1;
-                        ds_cursor = pc;
-                        update_screen();
-                    }
-
-                    // Исполнить код, если процессор запущен
-                    if (cpu_halt == 0) {
-
-                        // Выполнить инструкции
-                        while (framecycle < count_per_frame) {
-
-                            // Вызов прерывание
-                            if ((flag.i == 1) && (timer - last_timer) > intr_timer) {
-                                interruptcall();
-                            }
-
-                            // Выполнение инструкции
-                            framecycle += step();
-
-                            // Проверка останова
-                            for (k = 0; k < ds_brk_cnt; k++) if (pc == ds_brk[k]) { cpu_halt = 1; break; }
-
-                            // Отладочная инструкция BREAK
-                            if (cpu_halt) break;
-                        }
-
-                        // Остановка процессора
-                        if (cpu_halt) {
-
-                            ds_debugger = 1;
-                            ds_cursor = pc;
-                            update_screen();
-                        }
-
-                        // Вращение остаточных
-                        framecycle %= count_per_frame;
-                    }
-
-                    require_halt = 0;
-
-                    // Запрос обновления экрана в режиме экрана (flash)
-                    if (require_disp_update && !ds_debugger && videomode == 0) { display_update(); }
-
-                    flip();
+                    do_frame_event = 1;
                     break;
                 }
             }
+        }
+
+        // Обрабатывается потом
+        if (do_frame_event) {
+
+            timer = (timer + 20);
+            require_disp_update = 0;
+
+            // Перерисовка полного экрана
+            if (++flash_id > 10) { flash_id = 0; flash ^= 1; require_disp_update = 1; }
+
+            // Если запрошена остановка
+            if (require_halt) {
+
+                cpu_halt    = 1;
+                ds_debugger = 1;
+                ds_cursor   = pc;
+                update_screen();
+            }
+
+            // Исполнить код, если процессор запущен
+            if (cpu_halt == 0) {
+
+                // Выполнить инструкции
+                while (framecycle < count_per_frame) {
+
+                    // Вызов прерывание
+                    if ((flag.i == 1) && (timer - last_timer) > intr_timer) {
+                        interruptcall();
+                    }
+
+                    // Выполнение инструкции
+                    framecycle += step();
+
+                    // Проверка останова
+                    for (k = 0; k < ds_brk_cnt; k++) if (pc == ds_brk[k]) { cpu_halt = 1; break; }
+
+                    // Отладочная инструкция BREAK
+                    if (cpu_halt) break;
+                }
+
+                // Остановка процессора
+                if (cpu_halt) {
+
+                    ds_debugger = 1;
+                    ds_cursor = pc;
+                    update_screen();
+                }
+
+                // Вращение остаточных
+                framecycle %= count_per_frame;
+            }
+
+            require_halt = 0;
+
+            // Запрос обновления экрана в режиме экрана (flash)
+            if (require_disp_update && !ds_debugger && videomode == 0) { display_update(); }
+
+            flip();
         }
 
         SDL_Delay(1);

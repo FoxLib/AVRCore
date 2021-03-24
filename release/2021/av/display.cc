@@ -4,13 +4,8 @@
 // Отображение видеобуфера на экран
 // ---------------------------------------------------------------------
 
-// Обновление экрана
-void APP::update_screen() {
-
-    if (ds_debugger)
-         ds_update();
-    else display_update();
-}
+// Обновление экрана, в зависимости от текущего режима работы
+void APP::update_screen() { if (ds_debugger) ds_update(); else display_update(); }
 
 // Обновить текст в (X, Y)
 void APP::update_text_xy(int X, int Y) {
@@ -44,10 +39,10 @@ void APP::update_text_xy(int X, int Y) {
             if (height <= 480) {
                 pset(8*X + x + xshift, 16*Y + y + yshift, color);
             }
-            else                 
+            else
                 for (int k = 0; k < 4; k++) {
                     pset(2*(8*X + x) + k%2, 2*(16*Y + y) + k/2, color);
-                }            
+                }
         }
     }
 
@@ -57,15 +52,16 @@ void APP::update_text_xy(int X, int Y) {
 
 // 0xC000 - 0xFFFF Видеопамять
 void APP::update_byte_scr(int addr) {
-    
+
     int xshift = (width  - 640) / 2,
         yshift = (height - 400) / 2;
 
-    // Область видеопамяти
-    if (!ds_debugger) {
+    if (ds_debugger) return;
 
-        // 0: TEXT MODE 80x25
-        if (videomode == 0) {
+    switch (videomode) {
+
+        // TEXT 80x25
+        case 0:
 
             if ((addr >= 0xF000) && (addr < 0xFFA0)) {
 
@@ -77,88 +73,93 @@ void APP::update_byte_scr(int addr) {
             else if ((addr >= 0xFFA0 && addr < 0xFFC0) ||  // Палитра
                      (addr >= 0x10000 && addr <= 0x10FFF)) // Знакоместо
                      { require_disp_update = 1; }
+
+            break;
+
+    }
+
+    /*
+    // 2: 256 x 240 x 2
+    if (videomode == 2 && (addr >= 0xC000) && (addr < 0xFC00)) {
+
+        int cl;
+        int cb = sram[addr];
+
+        addr -= 0xC000;
+        int Y = addr >> 6;
+        int X = 4*(addr & 0x3F);
+
+        // Нарисовать 4 точки (1 байт)
+        for (int k = 0; k < 4; k++) {
+
+            switch ((cb >> (6 - 2*k)) & 3) {
+
+                case 0: cl = 0x000000; break;
+                case 1: cl = 0xC00000; break;
+                case 2: cl = 0x00C000; break;
+                case 3: cl = 0x0060FF; break;
+            }
+
+            // 3x3 масштаб БК-0010
+            if (height <= 480) {
+                pset((X + k)*2 + xshift, Y*2 + yshift, cl);
+            } else {
+                for (int m = 0; m < 9; m++)
+                pset((X + k)*3 + (m/3), Y*3 + (m%3), cl);
+            }
         }
-        // 2: 256 x 240 x 2
-        else if (videomode == 2 && (addr >= 0xC000) && (addr < 0xFC00)) {
+    }
+    // 1: 320 x 200 x 8
+    else if (videomode == 1) {
 
-            int cl;
-            int cb = sram[addr];
+        addr -= 0xc000;
 
-            addr -= 0xC000;
-            int Y = addr >> 6;
-            int X = 4*(addr & 0x3F);
+        // Попадает точка
+        if (addr >= 0 && addr < 64000) {
 
-            // Нарисовать 4 точки (1 байт)
-            for (int k = 0; k < 4; k++) {
+            uint cl = DOS_13[ sram[0xC000 + addr] ];
 
-                switch ((cb >> (6 - 2*k)) & 3) {
+            int  X = addr % 320;
+            int  Y = addr / 320;
 
-                    case 0: cl = 0x000000; break;
-                    case 1: cl = 0xC00000; break;
-                    case 2: cl = 0x00C000; break;
-                    case 3: cl = 0x0060FF; break;
-                }
-
-                // 3x3 масштаб БК-0010
-                if (height <= 480) {
-                    pset((X + k)*2 + xshift, Y*2 + yshift, cl);
-                } else {
-                    for (int m = 0; m < 9; m++)
-                    pset((X + k)*3 + (m/3), Y*3 + (m%3), cl);
+            if (height <= 480) {
+                pset(X*2 + xshift, Y*2 + yshift, cl);
+            } else {
+                for (int m = 0; m < 16; m++) {
+                    pset(4*X + (m>>2), 4*Y + (m&3), cl);
                 }
             }
         }
-        // 1: 320 x 200 x 8
-        else if (videomode == 1) {
+    }
+    // 3: 320 x 200 x 4
+    else if (videomode == 3) {
 
-            addr -= 0xc000;
+        addr -= 0x17000;
+        if (addr >= 0 && addr < 32000) {
 
-            // Попадает точка
-            if (addr >= 0 && addr < 64000) {
+            int  X = (addr % 160) << 1;
+            int  Y = (addr / 160);
+            int  cb = sram[0x17000 + addr];
 
-                uint cl = DOS_13[ sram[0xC000 + addr] ];
+            // 2 Пикселя в байте
+            for (int o = 0; o < 2; o++) {
 
-                int  X = addr % 320;
-                int  Y = addr / 320;
+                uint cl = o ? cb & 15 : (cb >> 4);
+                     cl = DOS_13[cl];
 
                 if (height <= 480) {
-                    pset(X*2 + xshift, Y*2 + yshift, cl);
+                    for (int m = 0; m < 4; m++) {
+                        pset((X + o)*2 + (m>>1) + xshift, Y*2 + (m&1) + yshift , cl);
+                    }
                 } else {
                     for (int m = 0; m < 16; m++) {
-                        pset(4*X + (m>>2), 4*Y + (m&3), cl);
-                    }
-                }
-            }
-        }
-        // 3: 320 x 200 x 4
-        else if (videomode == 3) {
-
-            addr -= 0x17000;
-            if (addr >= 0 && addr < 32000) {
-
-                int  X = (addr % 160) << 1;
-                int  Y = (addr / 160);
-                int  cb = sram[0x17000 + addr];
-
-                // 2 Пикселя в байте
-                for (int o = 0; o < 2; o++) {
-
-                    uint cl = o ? cb & 15 : (cb >> 4);
-                         cl = DOS_13[cl];
-
-                    if (height <= 480) {
-                        for (int m = 0; m < 4; m++) {
-                            pset((X + o)*2 + (m>>1) + xshift, Y*2 + (m&1) + yshift , cl);
-                        }
-                    } else {
-                        for (int m = 0; m < 16; m++) {
-                            pset(4*(X + o) + (m>>2), 4*Y + (m&3), cl);
-                        }
+                        pset(4*(X + o) + (m>>2), 4*Y + (m&3), cl);
                     }
                 }
             }
         }
     }
+    */
 }
 
 // Обновить весь экран
@@ -168,13 +169,24 @@ void APP::display_update() {
 
     cls(0);
 
+    switch (videomode) {
+
+         // TEXT 80x25
+        case 0:
+
+            for (y = 0; y < 25; y++)
+            for (x = 0; x < 80; x++)
+                update_text_xy(x, y);
+
+            break;
+    }
+
     // Видеорежим 80 x 25
     if (videomode == 0) {
 
-        for (y = 0; y < 25; y++)
-        for (x = 0; x < 80; x++)
-            update_text_xy(x, y);
+
     }
+    /*
     // Видеорежим 256 x 240 x 2
     else if (videomode == 2) {
 
@@ -224,35 +236,12 @@ void APP::display_update() {
             update_byte_scr(0x17000 + i);
         }
     }
+    **/
 }
 
 // ---------------------------------------------------------------------
 // Процедуры для работы с выводом текста
 // ---------------------------------------------------------------------
-
-// Печать на экране Char
-void APP::print3char(int col, int row, unsigned char ch, uint cl) {
-
-    ch -= 0x20;
-
-    col *= 4;
-    row *= 8;
-
-    for (int i = 0; i < 8; i++) {
-
-        unsigned char hl = ansi3[ch >> 1][i];
-
-        hl = (ch & 1 ? hl : hl>>4) & 0x0F;
-        for (int j = 0; j < 4; j++) {
-
-            int pcl = (hl & (1<<(3-j)) ? cl : 0);
-
-            // Рисовать большой пиксель
-            for (int k = 0; k < 4; k++)
-                pset((j + col) + (k>>1), (i + row) + (k%2), pcl);
-        }
-    }
-}
 
 // Печать на экране Char
 void APP::print16char(int col, int row, unsigned char ch, uint cl) {
@@ -268,13 +257,6 @@ void APP::print16char(int col, int row, unsigned char ch, uint cl) {
                 pset(j + col, i + row, cl);
         }
     }
-}
-
-// Печать строки
-void APP::print3(int col, int row, const char* s, uint cl) {
-
-    int i = 0;
-    while (s[i]) { print3char(col, row, s[i], cl); col++; i++; }
 }
 
 // Печать строки
