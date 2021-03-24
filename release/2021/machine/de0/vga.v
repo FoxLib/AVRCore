@@ -41,8 +41,8 @@ wire        xmax = (x == hz_whole - 1);
 wire        ymax = (y == vt_whole - 1);
 reg  [10:0] x    = 0;
 reg  [10:0] y    = 0;
-wire [10:0] X    = x - hz_back; // X=[0..639]
-wire [ 9:0] Y    = y - vt_back; // Y=[0..399]
+wire [10:0] X    = x - hz_back + 8; // X=[0..639]
+wire [ 9:0] Y    = y - vt_back;     // Y=[0..399]
 
 // Вычисление позиции курсора, его наличие.
 wire       cursor   = ((cursor_x + 1 == X[9:3]) && (cursor_y == Y[9:4])) && (Y[3:0] >= 14);
@@ -92,7 +92,7 @@ always @(posedge CLOCK) begin
                       cl_back_[7:0]  <= text_data; end
 
         // Прочитать BC[11:8], запрос знакоместа
-        3'b110: begin text_address   <= {text_char, Y[3:0]};
+        3'b110: begin text_address   <= {1'b1, text_char, Y[3:0]};
                       cl_back_[11:8] <= text_data[3:0]; end
 
         // Прочитать знакоместо, триггер для отрисовки
