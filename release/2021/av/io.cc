@@ -19,11 +19,9 @@ unsigned char APP::get(int addr) {
 
         // Банк памяти
         case 0x20: return membank;
-        case 0x21: return 0;
-
-        // Клавиатура
-        case 0x22: return port_keyb_xt;
-        case 0x23: dv = port_keyb_hit; port_keyb_hit &= ~1; break;
+        case 0x21: return port_keyb_xt;
+        case 0x22:
+            // dv = port_keyb_hit; port_keyb_hit &= ~1; break;
 
         // Курсор
         case 0x24: dv = cursor_x; break;
@@ -32,17 +30,10 @@ unsigned char APP::get(int addr) {
         // Таймер
         case 0x26: dv = timer & 0xff; break;
         case 0x27: dv = (timer >> 8) & 0xff; break;
-        case 0x2F: dv = (timer >> 16) & 0xff; break;
 
         // SPI
         case 0x28: dv = spi_read_data(); break;
         case 0x29: dv = spi_read_status(); break;
-
-        // Мышь
-        case 0x2A: dv =  get_mouse_x();       break; // Lo Mouse
-        case 0x2E: dv = (get_mouse_x() >> 8); break; // Hi Mouse
-        case 0x2B: dv =  get_mouse_y();       break;
-        case 0x2C: dv = mouse_cmd; break;
 
         // Видеорежим
         case 0x2D: return videomode;
@@ -53,7 +44,7 @@ unsigned char APP::get(int addr) {
         case 0x32: return (sdram_addr >> 16) & 0xff;
         case 0x33: return (sdram_addr >> 24) & 0xff;
         case 0x34: return sdram_data[sdram_addr & 0x3ffffff]; // data
-        case 0x35: return 0b00000010 | (sdram_ctl & 1); // ready=1, we=?
+        // case 0x35: return 0b00000010 | (sdram_ctl & 1); // ready=1, we=?
 
         // Остальная память
         default:   dv = sram[addr]; break;
@@ -77,9 +68,8 @@ void APP::put(int addr, unsigned char value) {
 
     // Карта памяти
     if (addr == 0x20) { membank = value; }
-    if (addr == 0x21) { /* membank */ }
-    if (addr == 0x22) { port_keyb_xt  = value; }
-    if (addr == 0x23) { port_keyb_hit = value; }
+    if (addr == 0x21) { port_keyb_xt  = value; }
+//    if (addr == 0x22) { port_keyb_hit = value; }
 
     // Обновление позиции курсора
     if (addr == 0x24) { cursor_x = value; update_text_xy(text_px, text_py); update_text_xy(cursor_x, cursor_y); }

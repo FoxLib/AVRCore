@@ -1,5 +1,5 @@
-module avrcpu
-(
+module avrcpu(
+
     input  wire        clock,
 
     // Программная память
@@ -33,12 +33,6 @@ initial begin
     r[19] = 8'h00; r[23] = 8'h00; r[27] = 8'h00; r[31] = 8'hFA;
 
 end
-
-// Отладочные провода
-wire [7:0] _r1 = r[16];
-wire [7:0] _r2 = r[17];
-wire [7:0] _r3 = r[14];
-wire [7:0] _r4 = r[15];
 
 `define SPDEC 1
 `define SPINC 2
@@ -237,7 +231,7 @@ begin
     end
 
     // Есть истечение времени работы инструкции
-    else if (tstate == 0 && sreg[7] && (timer_ms[7:0] - intr_timer > intr_maxtime)) begin
+    else if (tstate == 0 && sreg[7] && intr_maxtime && (timer_ms[7:0] - intr_timer > intr_maxtime)) begin
 
         intr_trigger <= 1'b1;
         intr_timer   <= timer_ms[7:0];

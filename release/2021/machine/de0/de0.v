@@ -78,11 +78,13 @@ assign HEX5 = 7'b1111111;
 // Генерация частот
 wire locked;
 wire clock_25;
+wire clock_100;
 
 de0pll unit_pll
 (
     .clkin     (CLOCK_50),
     .m25       (clock_25),
+    .m100      (clock_100),
     .locked    (locked)
 );
 
