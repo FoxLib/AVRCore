@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
     if (argc > 1) { avr.loadfile(argv[1]); }
 
     avr.ds_update();
-    avr.infinite();
+    avr.main();
 
     return 0;
 }

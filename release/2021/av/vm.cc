@@ -27,41 +27,50 @@ uint AVRDisplayTimer(uint interval, void *param) {
 APP::APP() {
 
     // Инициализация
-    pc = 0x0000;
-    membank = 0;
-    videomode = 0;
-
-    ds_start = 0;
-    ds_cursor = 0;
-    ds_debugger = 1;
-    ds_tab = 0;
-    ds_dump_cursor = 0;
-    ds_dump_start = 0;
-
-    cpu_halt = 1;
-    require_halt = 0;
-    instr_counter = 0;
+    membank         = 0;
+    videomode       = 0;
     count_per_frame = 200000;    // 10,0 mHz процессор
-    framecycle = 0;
-    ds_brk_cnt = 0;
-    port_keyb_hit = 0;
-    text_px = 0;
-    text_py = 0;
-    cursor_x = 0;
-    cursor_y = 0;
-    flash = 0;
-    flash_id = 0;
+
+    // Отладчик
+    ds_start        = 0;
+    ds_cursor       = 0;
+    ds_debugger     = 1;
+    ds_tab          = 0;
+    ds_dump_cursor  = 0;
+    ds_dump_start   = 0;
+    ds_brk_cnt      = 0;
+
+    // Процессор
+    pc              = 0x0000;
+    cpu_halt        = 1;
+    require_halt    = 0;
+    instr_counter   = 0;
+    framecycle      = 0;
+
+    // Клавиатура
+    port_keyb_hit   = 0;
+
+    // Дисплей
     require_disp_update = 0;
-    spi_status = 0;
-    spi_command = 0;
-    spi_phase = 0;
-    spi_arg = 0;
-    spi_lba = 0;
-    spi_resp = 0xFF;
-    mouse_cmd = 0;
-    spi_st = 2; // Timeout SD
-    intr_timer = 0;
-    last_timer = 0;
+    text_px         = 0;
+    text_py         = 0;
+    cursor_x        = 0;
+    cursor_y        = 0;
+    flash           = 0;
+    flash_id        = 0;
+
+    // SPI
+    spi_status      = 0;
+    spi_command     = 0;
+    spi_phase       = 0;
+    spi_arg         = 0;
+    spi_lba         = 0;
+    spi_resp        = 0xFF;
+    spi_st          = 2; // Timeout SD
+
+    // Таймер
+    intr_timer      = 0;
+    last_timer      = 0;
 
     sdram_data = (unsigned char*)malloc(64*1024*1024);
     for (int i = 0; i < 64*1024*1024; i++) sdram_data[i] = 0x55 ^ i;
@@ -72,9 +81,7 @@ APP::APP() {
 }
 
 // Деструктор
-APP::~APP() {
-    free(sdram_data);
-}
+APP::~APP() { free(sdram_data); }
 
 // Создание окна
 void APP::window(const char* caption) {
@@ -90,6 +97,8 @@ void APP::window(const char* caption) {
 
     sdl_screen = SDL_SetVideoMode(w, h, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
     SDL_WM_SetCaption(caption, 0);
+
+    // @TODO переделать
     SDL_AddTimer(1000 / clock_video, AVRDisplayTimer, NULL);
 }
 
@@ -139,7 +148,7 @@ void APP::config() {
 // Главный обработчик приложения
 // ---------------------------------------------------------------------
 
-void APP::infinite() {
+void APP::main() {
 
     int k, i, keyid, mk;
     int jump_dump = (height - 16*18);
@@ -151,15 +160,18 @@ void APP::infinite() {
 
             switch (event.type) {
 
-                // Если нажато на крестик, то приложение будет закрыто
-                case SDL_QUIT:
+                // Закрытие приложения
+                case SDL_QUIT: {
                     return;
+                }
 
-                case SDL_MOUSEMOTION:
+                // Регистрация движения мыши
+                case SDL_MOUSEMOTION: {
 
                     mouse_x = event.motion.x;
                     mouse_y = event.motion.y;
                     break;
+                }
 
                 // Нажата мышь
                 case SDL_MOUSEBUTTONDOWN: {
@@ -171,11 +183,10 @@ void APP::infinite() {
                     if (mk == SDL_BUTTON_LEFT)       mouse_cmd |= 1;
                     else if (mk == SDL_BUTTON_RIGHT) mouse_cmd |= 2;
 
-                    // Установка курсора мыши куда следует
+                    // Установка курсора мыши
                     if (mouse_x >= 8 && mouse_x < 54*8 && mouse_y >= 16 && mouse_y < 44*16 && ds_debugger) {
 
                         ds_cursor = ds_addresses[ mouse_y>>4 ];
-                        swi_brk();
                         ds_update();
                     }
 
@@ -205,7 +216,7 @@ void APP::infinite() {
 
                         if (keyid > 0) {
 
-                            port_keyb_hit |= 1;
+                            port_keyb_hit ^= 1;
                             port_keyb_xt   = keyid;
                         }
                     }
@@ -370,7 +381,7 @@ void APP::infinite() {
 
                         if (keyid > 0) {
 
-                            port_keyb_hit |= 1;
+                            port_keyb_hit ^= 1;
                             port_keyb_xt   = 0x80 | keyid;
                         }
                     }
@@ -378,7 +389,7 @@ void APP::infinite() {
                     break;
                 }
 
-                // Вызывается по таймеру
+                // @TODO Вызывается по таймеру
                 case SDL_USEREVENT: {
 
                     timer = (timer + 20);

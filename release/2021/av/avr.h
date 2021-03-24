@@ -123,12 +123,13 @@ protected:
 
     // I/O
     int  membank;
-    int  videomode;      // 0 - TEXT 80x25, 1 - 320x200, 2 - 256x240
+    int  videomode;
     int  port_keyb_hit;
     int  port_keyb_xt;
     int  text_px, text_py;
     int  cursor_x, cursor_y, flash, flash_id, require_disp_update;
     int  mouse_x, mouse_y, mouse_cmd;
+
     unsigned long timer;
     unsigned long intr_timer, last_timer;
 
@@ -154,7 +155,7 @@ public:
 
     // Приложение
     void window(const char*);
-    void infinite();
+    void main();
     void loadfile(const char* fn);
     int  get_key(SDL_Event event);
     void update_screen();

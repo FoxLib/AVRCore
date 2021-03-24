@@ -51,7 +51,8 @@ always @* begin
         16'b0000_0000_000x_xxxx: din = r[ address[4:0] ];
 
         // Встроенный таймер
-        // @todo timer_ms
+        16'h002E: din = timer_ms[ 7:0];
+        16'h002F: din = timer_ms[15:8];
 
         // Процессор
         16'h005B: din = rampz;

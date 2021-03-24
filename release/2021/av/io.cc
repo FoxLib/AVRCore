@@ -19,32 +19,35 @@ unsigned char APP::get(int addr) {
 
         // Банк памяти
         case 0x20: return membank;
+
+        // Клавиатура
         case 0x21: return port_keyb_xt;
-        case 0x22:
-            // dv = port_keyb_hit; port_keyb_hit &= ~1; break;
+
+        // Статус устройств
+        // 0: keyboard hit; 1: spi busy; 2: dram busy; 3: sdram we=1
+        case 0x22: return (port_keyb_hit & 1) | (sdram_ctl & 8);
 
         // Курсор
-        case 0x24: dv = cursor_x; break;
-        case 0x25: dv = cursor_y; break;
+        case 0x2C: dv = cursor_x; break;
+        case 0x2D: dv = cursor_y; break;
 
         // Таймер
-        case 0x26: dv = timer & 0xff; break;
-        case 0x27: dv = (timer >> 8) & 0xff; break;
-
-        // SPI
-        case 0x28: dv = spi_read_data(); break;
-        case 0x29: dv = spi_read_status(); break;
-
-        // Видеорежим
-        case 0x2D: return videomode;
+        case 0x2E: dv = timer & 0xff; break;
+        case 0x2F: dv = (timer >> 8) & 0xff; break;
 
         // SDRAM
         case 0x30: return  sdram_addr & 0xff;
         case 0x31: return (sdram_addr >> 8) & 0xff;
         case 0x32: return (sdram_addr >> 16) & 0xff;
         case 0x33: return (sdram_addr >> 24) & 0xff;
-        case 0x34: return sdram_data[sdram_addr & 0x3ffffff]; // data
-        // case 0x35: return 0b00000010 | (sdram_ctl & 1); // ready=1, we=?
+        case 0x34: return sdram_data[sdram_addr & 0x3ffffff];
+
+        // Видео
+        case 0x38: return videomode;
+
+        // SPI
+        case 0x39: dv = spi_read_data(); break;
+        case 0x3A: dv = spi_read_status(); break;
 
         // Остальная память
         default:   dv = sram[addr]; break;
@@ -63,37 +66,46 @@ void APP::put(int addr, unsigned char value) {
 
     sram[addr] = value;
 
-    // Запись во флаги
-    if (addr == 0x5F) byte_to_flag(value);
+    switch (addr) {
 
-    // Карта памяти
-    if (addr == 0x20) { membank = value; }
-    if (addr == 0x21) { port_keyb_xt  = value; }
-//    if (addr == 0x22) { port_keyb_hit = value; }
+        // Системные
+        case 0x20: membank = value; break;
+        case 0x21: intr_timer = value; break;
 
-    // Обновление позиции курсора
-    if (addr == 0x24) { cursor_x = value; update_text_xy(text_px, text_py); update_text_xy(cursor_x, cursor_y); }
-    if (addr == 0x25) { cursor_y = value; update_text_xy(text_px, text_py); update_text_xy(cursor_x, cursor_y); }
+        // Флаг записи в память SDRAM
+        case 0x22:
 
-    if (addr == 0x28) { spi_write_data(value); }
-    if (addr == 0x29) { spi_write_cmd(value); }
-    if (addr == 0x2D) { videomode = value; update_screen(); }
+            if (value & 8)
+                sdram_data[sdram_addr & 0x3ffffff] = sdram_data_byte;
 
-    // Управлению памятью
-    if (addr == 0x30) sdram_addr = (sdram_addr & 0xFFFFFF00) | value;
-    if (addr == 0x31) sdram_addr = (sdram_addr & 0xFFFF00FF) | (value << 8);
-    if (addr == 0x32) sdram_addr = (sdram_addr & 0xFF00FFFF) | (value << 16);
-    if (addr == 0x33) sdram_addr = (sdram_addr & 0x00FFFFFF) | (value << 24);
-    if (addr == 0x34) sdram_data_byte = value;
-    if (addr == 0x35) {
+            sdram_ctl = value;
+            break;
 
-        if (value & 1)
-            sdram_data[sdram_addr & 0x3ffffff] = sdram_data_byte;
+        // Курсор
+        case 0x2C:
 
-        sdram_ctl = value;
+            cursor_x = value;
+            update_text_xy(text_px, text_py);
+            update_text_xy(cursor_x, cursor_y);
+            break;
+
+        case 0x2D:
+
+            cursor_y = value;
+            update_text_xy(text_px, text_py);
+            update_text_xy(cursor_x, cursor_y);
+            break;
+
+        // SDRAM
+        case 0x30: sdram_addr = (sdram_addr & 0xFFFFFF00) | value; break;
+        case 0x31: sdram_addr = (sdram_addr & 0xFFFF00FF) | (value << 8); break;
+        case 0x32: sdram_addr = (sdram_addr & 0xFF00FFFF) | (value << 16); break;
+        case 0x33: sdram_addr = (sdram_addr & 0x00FFFFFF) | (value << 24); break;
+        case 0x34: sdram_data_byte = value; break;
+
+        // Специальный регистр
+        case 0x5F: byte_to_flag(value); break;
     }
-
-    if (addr == 0x36) intr_timer = value;
 
     // Нарисовать на холсте
     if (addr >= 0xC000) { update_byte_scr(addr); }
