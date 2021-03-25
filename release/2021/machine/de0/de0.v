@@ -118,27 +118,48 @@ avrcpu ModuleCPU
 );
 
 // ---------------------------------------------------------------------
+// Контроллер памяти
+// ---------------------------------------------------------------------
+
+reg  [7:0]  bank = 0;     // Текущий банк памяти
+wire [7:0]  data_o_sram;
+wire [7:0]  data_o_text;
+reg         data_w_sram;  // Разрешение записи в SRAM
+reg         data_w_text;  // Разрешение на запись в TEXT
+reg         bank_memtext; // =0 Char =1 Font
+
+// ---------------------------------------------------------------------
 // Модули внутрисхемной памяти
 // ---------------------------------------------------------------------
 
-// 128k Память программ
+// WORD 32k (64k) Память программ
 memflash UnitMemFlash
 (
     .clock     (clock),
-    .address_a (pc),
+    .address_a (pc[14:0]),
     .q_a       (ir),
 );
 
-// 8k Видеопамять текстового режима
+// BYTE 64k Общая оперативная память
+memsram UnitMemsram
+(
+    .clock     (clock),
+    .address_a (address),
+    .q_a       (data_o_sram),
+    .data_a    (data_o),
+    .wren_a    (data_w_sram),
+);
+
+// BYTE 8k Видеопамять текстового режима
 memtext UnitMemtext
 (
     .clock     (clock),
-    // .address_a (address_a),
+    .address_a ({bank_memtext, address[11:0]}),
     .address_b (text_address),
-    // .q_a       (q_a),
+    .q_a       (data_o_text),
     .q_b       (text_data),
-    // .data_a    (data_a),
-    // .wren_a    (wren_a),
+    .data_a    (data_o),
+    .wren_a    (data_w_text),
 );
 
 // 128k Видеопамять графического режима

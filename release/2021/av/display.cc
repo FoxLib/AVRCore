@@ -13,8 +13,11 @@ void APP::update_text_xy(int X, int Y) {
     if (videomode)
         return;
 
+    // PAGE 1: Страница символов и палитры
+    // PAGE 2: Страница знакогенератора
+
     int k;
-    int addr = 0xF000 + 160*Y + 2*X;
+    int addr = 0x10000 + 160*Y + 2*X;
     int ch   = sram[ addr + 0 ];
     int attr = sram[ addr + 1 ];
     int xshift = (width  - 640) / 2,
@@ -22,15 +25,15 @@ void APP::update_text_xy(int X, int Y) {
 
     for (int y = 0; y < 16; y++) {
 
-        int ft = sram[0x10000 + 16*ch + y]; // ansi16[ch][y]; // sram
+        int ft = sram[0x11000 + 16*ch + y];
         for (int x = 0; x < 8; x++) {
 
             int cbit  = ft & (1 << (7 - x));
             int cursor = (cursor_x == X && cursor_y == Y) && (y >= 14) ? 1 : 0;
             int color = cbit ^ (flash & cursor) ? (attr & 0x0F) : (attr >> 4);
 
-            int gb = sram[0xFFA0 + 2*color];
-            int  r = sram[0xFFA1 + 2*color];
+            int gb = sram[0x10FA0 + 2*color];
+            int  r = sram[0x10FA1 + 2*color];
 
             // Вычисляется цвет
             color = ((gb & 0x0F) << 4) | ((gb & 0xF0) << 8) | ((r & 0x0F) << 20);
@@ -63,103 +66,19 @@ void APP::update_byte_scr(int addr) {
         // TEXT 80x25
         case 0:
 
-            if ((addr >= 0xF000) && (addr < 0xFFA0)) {
+            if ((addr >= 0x10000) && (addr < 0x10FA0)) {
 
-                addr = (addr - 0xF000) >> 1;
+                addr = (addr - 0x10000) >> 1;
                 update_text_xy(text_px, text_py);
                 update_text_xy(addr % 80, addr / 80);
             }
             // Обновить весь дисплей - меняется цвет в палитре
-            else if ((addr >= 0xFFA0 && addr < 0xFFC0) ||  // Палитра
-                     (addr >= 0x10000 && addr <= 0x10FFF)) // Знакоместо
+            else if ((addr >= 0x10FA0 && addr < 0x10FC0) ||  // Палитра
+                     (addr >= 0x11000 && addr <= 0x11FFF))   // Знакоместо
                      { require_disp_update = 1; }
 
             break;
-
     }
-
-    /*
-    // 2: 256 x 240 x 2
-    if (videomode == 2 && (addr >= 0xC000) && (addr < 0xFC00)) {
-
-        int cl;
-        int cb = sram[addr];
-
-        addr -= 0xC000;
-        int Y = addr >> 6;
-        int X = 4*(addr & 0x3F);
-
-        // Нарисовать 4 точки (1 байт)
-        for (int k = 0; k < 4; k++) {
-
-            switch ((cb >> (6 - 2*k)) & 3) {
-
-                case 0: cl = 0x000000; break;
-                case 1: cl = 0xC00000; break;
-                case 2: cl = 0x00C000; break;
-                case 3: cl = 0x0060FF; break;
-            }
-
-            // 3x3 масштаб БК-0010
-            if (height <= 480) {
-                pset((X + k)*2 + xshift, Y*2 + yshift, cl);
-            } else {
-                for (int m = 0; m < 9; m++)
-                pset((X + k)*3 + (m/3), Y*3 + (m%3), cl);
-            }
-        }
-    }
-    // 1: 320 x 200 x 8
-    else if (videomode == 1) {
-
-        addr -= 0xc000;
-
-        // Попадает точка
-        if (addr >= 0 && addr < 64000) {
-
-            uint cl = DOS_13[ sram[0xC000 + addr] ];
-
-            int  X = addr % 320;
-            int  Y = addr / 320;
-
-            if (height <= 480) {
-                pset(X*2 + xshift, Y*2 + yshift, cl);
-            } else {
-                for (int m = 0; m < 16; m++) {
-                    pset(4*X + (m>>2), 4*Y + (m&3), cl);
-                }
-            }
-        }
-    }
-    // 3: 320 x 200 x 4
-    else if (videomode == 3) {
-
-        addr -= 0x17000;
-        if (addr >= 0 && addr < 32000) {
-
-            int  X = (addr % 160) << 1;
-            int  Y = (addr / 160);
-            int  cb = sram[0x17000 + addr];
-
-            // 2 Пикселя в байте
-            for (int o = 0; o < 2; o++) {
-
-                uint cl = o ? cb & 15 : (cb >> 4);
-                     cl = DOS_13[cl];
-
-                if (height <= 480) {
-                    for (int m = 0; m < 4; m++) {
-                        pset((X + o)*2 + (m>>1) + xshift, Y*2 + (m&1) + yshift , cl);
-                    }
-                } else {
-                    for (int m = 0; m < 16; m++) {
-                        pset(4*(X + o) + (m>>2), 4*Y + (m&3), cl);
-                    }
-                }
-            }
-        }
-    }
-    */
 }
 
 // Обновить весь экран
@@ -180,63 +99,6 @@ void APP::display_update() {
 
             break;
     }
-
-    // Видеорежим 80 x 25
-    if (videomode == 0) {
-
-
-    }
-    /*
-    // Видеорежим 256 x 240 x 2
-    else if (videomode == 2) {
-
-        k = 0;
-        for (y = 0; y < 720; y++) {
-            for (x = 0; x < 768; x++) {
-
-                int mx = x / 3, my = y / 3;
-                int kx = mx & 3;
-                int cb = sram[0xC000 + ((my*256 + mx) >> 2)];
-                int cl;
-
-                // 11.00.00.00 mx=0 >> 6 ==> 6 - 2*0 = 6
-                // 00.11.00.00 mx=1 >> 4 ==> 6 - 2*1 = 4
-                // 00.00.11.00 mx=2 >> 2 ==> 6 - 2*2 = 2
-                // 00.00.00.11 mx=3 >> 0 ==> 6 - 2*3 = 0
-
-                switch ((cb >> (6 - 2*kx)) & 3) {
-
-                    case 0: cl = 0x000000; break;
-                    case 1: cl = 0xC00000; break;
-                    case 2: cl = 0x00C000; break;
-                    case 3: cl = 0x0060FF; break;
-                }
-
-                ( (Uint32*)sdl_screen->pixels )[ width*y + x  ] = cl;
-            }
-        }
-    }
-    // Видеорежим 320 x 200 x 8
-    else if (videomode == 1) {
-
-        for (int x = 0; x < 1280; x++)
-        for (int y = 0; y < 800; y++) {
-
-            int X = x >> 2, Y = y >> 2;
-            int cl = sram[X + Y*320 + 0xc000];
-                cl = DOS_13[cl];
-
-            pset(x, y, cl);
-        }
-    }
-    // Видеорежим 320 x 200 x 4
-    else if (videomode == 3) {
-
-        for (int i = 0; i < 32000; i++) {
-            update_byte_scr(0x17000 + i);
-        }
-    }
-    **/
 }
 
 // ---------------------------------------------------------------------
