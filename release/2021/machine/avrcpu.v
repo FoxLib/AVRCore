@@ -156,7 +156,7 @@ end
 
 // Таймер прерываний
 reg        intr_trigger = 0;
-reg [ 7:0] intr_maxtime = 0; // Выключен
+reg [ 7:0] intr_maxtime = 25; // Срабатывание каждые 25 миллисекунд
 reg [ 7:0] intr_timer   = 0;
 
 // ---------------------------------------------------------------------
@@ -231,7 +231,7 @@ begin
 
     end
 
-    // Есть истечение времени работы инструкции
+    // Есть истечение времени работы инструкции IRQ#0
     else if (tstate == 0 && sreg[7] && intr_maxtime && (timer_ms[7:0] - intr_timer > intr_maxtime)) begin
 
         intr_trigger <= 1'b1;

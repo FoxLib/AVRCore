@@ -12,7 +12,7 @@ protected:
 
 public:
 
-    screen() {
+    void init() {
 
         bank(2);
         outp(VIDEOMODE, 0);
@@ -118,11 +118,11 @@ public:
     int print(const char* s) {
 
         int i = 0;
-        hide();
+
         while (s[i]) {
             print_char(s[i++]);
         }
-        show();
+
         return i;
     }
 
