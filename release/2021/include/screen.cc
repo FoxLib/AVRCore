@@ -12,13 +12,17 @@ protected:
 
 public:
 
-    void init() {
+    void init(int attr) {
 
         bank(2);
         outp(VIDEOMODE, 0);
         locate(0, 0);
         cursor_cl = 0x07;
+
+        if (attr > 0) cls(attr);
     }
+
+    void init() { init(-1); }
 
     // -----------------------------------------------------------------
     // Функции для работы с видеобуфером
