@@ -229,31 +229,31 @@ void APP::main() {
                     if (cpu_halt) {
 
                         // Выполнить шаг
-                        if (keyid == 0x41) { step(); ds_cursor = pc; }
+                        if (keyid == key_F7) { step(); ds_cursor = pc; }
 
                         // Вызов прерывания
-                        if (keyid == 0x3D) { interruptcall(); ds_cursor = pc; }
+                        if (keyid == key_F3) { interruptcall(); ds_cursor = pc; }
 
                         // Если запущена отладка, обновить
                         if (ds_debugger) ds_update();
                     }
 
                     // F2 Остановка
-                    if (keyid == 0x3C && ds_debugger) {
+                    if (keyid == key_F2 && ds_debugger) {
 
                         swi_brk();
                         ds_update();
                     }
 
                     // F5 Посмотреть окно (рабочее) или отладчик
-                    if (keyid == 0x3F) {
+                    if (keyid == key_F5) {
 
                         ds_debugger ^= 1;
                         update_screen();
                     }
 
                     // F9 Запуск программы (либо остановка)
-                    if (keyid == 0x43) {
+                    if (keyid == key_F9) {
 
                         // Процессор остановлен, запустить его
                         if (cpu_halt) {
@@ -274,7 +274,7 @@ void APP::main() {
                     if (keyid == -86) { count_per_frame *= 1.5; printf("cycles: %d\n", count_per_frame); }
 
                     // TAB
-                    if (keyid == 15) {
+                    if (keyid == key_TAB) {
 
                         if (ds_debugger) {
 
@@ -286,7 +286,7 @@ void APP::main() {
                     }
 
                     // PgDn
-                    if (keyid == 0x56 && ds_debugger) {
+                    if (keyid == key_PGDN && ds_debugger) {
 
                         if (ds_tab == 1) {
                             ds_dump_cursor += jump_dump;
@@ -301,7 +301,7 @@ void APP::main() {
                     }
 
                     // PgUp
-                    if (keyid == 0x55 && ds_debugger) {
+                    if (keyid == key_PGUP && ds_debugger) {
 
                         if (ds_tab == 1) {
                             ds_dump_cursor -= jump_dump;
@@ -320,7 +320,7 @@ void APP::main() {
                     }
 
                     // KeyDown
-                    if (keyid == 0x62 && ds_debugger) {
+                    if (keyid == key_DN && ds_debugger) {
 
                         if (ds_tab == 1) {
 
@@ -337,7 +337,7 @@ void APP::main() {
                     }
 
                     // KeyUp
-                    if (keyid == 0x60 && ds_debugger) {
+                    if (keyid == key_UP && ds_debugger) {
 
                         if (ds_tab == 1) {
 
@@ -360,8 +360,8 @@ void APP::main() {
                     // Горячие клавиши
                     if (ds_debugger && ds_tab == 1) {
 
-                        if (keyid == 19) /* R */ ds_dump_cursor = ds_dump_start = 0x0000;
-                        if (keyid == 47) /* V */ ds_dump_cursor = ds_dump_start = 0xc000;
+                        if (keyid == 'R') /* R */ ds_dump_cursor = ds_dump_start = 0x0000;
+                        if (keyid == 'V') /* V */ ds_dump_cursor = ds_dump_start = 0xc000;
 
                         ds_update();
                     }
@@ -369,7 +369,12 @@ void APP::main() {
                     // Нажатие горящей путевки в режиме ds_tab
                     if (ds_debugger && ds_tab == 0) {
 
-                        if (keyid == 19) /* R */ { pc = ds_start = ds_cursor = 0; instr_counter = 0; ds_update(); }
+                        if (keyid == 'R') /* R */ {
+
+                            pc = ds_start = ds_cursor = 0;
+                            instr_counter = 0;
+                            ds_update();
+                        }
                     }
 
                     break;
@@ -519,97 +524,96 @@ int APP::get_key(SDL_Event event) {
     int xt = 0;
     int k = eventkey->keysym.scancode;
 
-    //printf("%d ", k);
     switch (k) {
 
-        /* A */ case 0x26: xt = 0x1E; break;
-        /* B */ case 0x38: xt = 0x30; break;
-        /* C */ case 0x36: xt = 0x2E; break;
-        /* D */ case 0x28: xt = 0x20; break;
-        /* E */ case 0x1a: xt = 0x12; break;
-        /* F */ case 0x29: xt = 0x21; break;
-        /* G */ case 0x2a: xt = 0x22; break;
-        /* H */ case 0x2b: xt = 0x23; break;
-        /* I */ case 0x1f: xt = 0x17; break;
-        /* J */ case 0x2c: xt = 0x24; break;
-        /* K */ case 0x2d: xt = 0x25; break;
-        /* L */ case 0x2e: xt = 0x26; break;
-        /* M */ case 0x3a: xt = 0x32; break;
-        /* N */ case 0x39: xt = 0x31; break;
-        /* O */ case 0x20: xt = 0x18; break;
-        /* P */ case 0x21: xt = 0x19; break;
-        /* Q */ case 0x18: xt = 0x10; break;
-        /* R */ case 0x1b: xt = 0x13; break;
-        /* S */ case 0x27: xt = 0x1F; break;
-        /* T */ case 0x1c: xt = 0x14; break;
-        /* U */ case 0x1e: xt = 0x16; break;
-        /* V */ case 0x37: xt = 0x2F; break;
-        /* W */ case 0x19: xt = 0x11; break;
-        /* X */ case 0x35: xt = 0x2D; break;
-        /* Y */ case 0x1d: xt = 0x15; break;
-        /* Z */ case 0x34: xt = 0x2C; break;
+        /* A */ case 0x26: xt = 0x41; break;
+        /* B */ case 0x38: xt = 0x42; break;
+        /* C */ case 0x36: xt = 0x43; break;
+        /* D */ case 0x28: xt = 0x44; break;
+        /* E */ case 0x1a: xt = 0x45; break;
+        /* F */ case 0x29: xt = 0x46; break;
+        /* G */ case 0x2a: xt = 0x47; break;
+        /* H */ case 0x2b: xt = 0x48; break;
+        /* I */ case 0x1f: xt = 0x49; break;
+        /* J */ case 0x2c: xt = 0x4A; break;
+        /* K */ case 0x2d: xt = 0x4B; break;
+        /* L */ case 0x2e: xt = 0x4C; break;
+        /* M */ case 0x3a: xt = 0x4D; break;
+        /* N */ case 0x39: xt = 0x4E; break;
+        /* O */ case 0x20: xt = 0x4F; break;
+        /* P */ case 0x21: xt = 0x50; break;
+        /* Q */ case 0x18: xt = 0x51; break;
+        /* R */ case 0x1b: xt = 0x52; break;
+        /* S */ case 0x27: xt = 0x53; break;
+        /* T */ case 0x1c: xt = 0x54; break;
+        /* U */ case 0x1e: xt = 0x55; break;
+        /* V */ case 0x37: xt = 0x56; break;
+        /* W */ case 0x19: xt = 0x57; break;
+        /* X */ case 0x35: xt = 0x58; break;
+        /* Y */ case 0x1d: xt = 0x59; break;
+        /* Z */ case 0x34: xt = 0x5A; break;
 
-        /* 0 */ case 0x13: xt = 0x0B; break;
-        /* 1 */ case 0x0A: xt = 0x02; break;
-        /* 2 */ case 0x0B: xt = 0x03; break;
-        /* 3 */ case 0x0C: xt = 0x04; break;
-        /* 4 */ case 0x0D: xt = 0x05; break;
-        /* 5 */ case 0x0E: xt = 0x06; break;
-        /* 6 */ case 0x0F: xt = 0x07; break;
-        /* 7 */ case 0x10: xt = 0x08; break;
-        /* 8 */ case 0x11: xt = 0x09; break;
-        /* 9 */ case 0x12: xt = 0x0A; break;
+        /* 0 */ case 0x13: xt = 0x30; break;
+        /* 1 */ case 0x0A: xt = 0x31; break;
+        /* 2 */ case 0x0B: xt = 0x32; break;
+        /* 3 */ case 0x0C: xt = 0x33; break;
+        /* 4 */ case 0x0D: xt = 0x34; break;
+        /* 5 */ case 0x0E: xt = 0x35; break;
+        /* 6 */ case 0x0F: xt = 0x36; break;
+        /* 7 */ case 0x10: xt = 0x37; break;
+        /* 8 */ case 0x11: xt = 0x38; break;
+        /* 9 */ case 0x12: xt = 0x39; break;
 
-        /* ~ */ case 0x31: xt = 0x29; break;
-        /* - */ case 0x14: xt = 0x0C; break;
-        /* = */ case 0x15: xt = 0x0D; break;
-        /* \ */ case 0x33: xt = 0x2B; break;
-        /* [ */ case 0x22: xt = 0x1A; break;
-        /* ] */ case 0x23: xt = 0x1B; break;
-        /* ; */ case 0x2f: xt = 0x27; break;
-        /* ' */ case 0x30: xt = 0x28; break;
-        /* , */ case 0x3b: xt = 0x33; break;
-        /* . */ case 0x3c: xt = 0x34; break;
-        /* / */ case 0x3d: xt = 0x35; break;
+        /* ` */ case 0x31: xt = 0x60; break;
+        /* - */ case 0x14: xt = 0x2D; break;
+        /* = */ case 0x15: xt = 0x3D; break;
+        /* \ */ case 0x33: xt = 0x5C; break;
+        /* [ */ case 0x22: xt = 0x5B; break;
+        /* ] */ case 0x23: xt = 0x5D; break;
+        /* ; */ case 0x2f: xt = 0x3B; break;
+        /* ' */ case 0x30: xt = 0x27; break;
+        /* , */ case 0x3b: xt = 0x2C; break;
+        /* . */ case 0x3c: xt = 0x2E; break;
+        /* / */ case 0x3d: xt = 0x2F; break;
 
-        /* bs */ case 0x16: xt = 0x0E; break; // Back Space
-        /* sp */ case 0x41: xt = 0x39; break; // Space
-        /* tb */ case 0x17: xt = 0x0F; break; // Tab
-        /* ls */ case 0x32: xt = 0x2A; break; // Left Shift
-        /* lc */ case 0x25: xt = 0x1D; break; // Left Ctrl
-        /* la */ case 0x40: xt = 0x38; break; // Left Alt
-        /* en */ case 0x24: xt = 0x1C; break; // Enter
-        /* es */ case 0x09: xt = 0x01; break; // Escape
+        /* F1  */ case 67: xt = key_F1; break;
+        /* F2  */ case 68: xt = key_F2; break;
+        /* F3  */ case 69: xt = key_F3; break;
+        /* F4  */ case 70: xt = key_F4; break;
+        /* F5  */ case 71: xt = key_F5; break;
+        /* F6  */ case 72: xt = key_F6; break;
+        /* F7  */ case 73: xt = key_F7; break;
+        /* F8  */ case 74: xt = key_F8; break;
+        /* F9  */ case 75: xt = key_F9; break;
+        /* F10 */ case 76: xt = key_F10; break;
+        /* F11 */ case 95: xt = key_F11; break;
+        /* F12 */ case 96: xt = key_F12; break;
 
-        /* F1  */ case 67: xt = 0x3B; break;
-        /* F2  */ case 68: xt = 0x3C; break;
-        /* F3  */ case 69: xt = 0x3D; break;
-        /* F4  */ case 70: xt = 0x3E; break;
-        /* F5  */ case 71: xt = 0x3F; break;
-        /* F6  */ case 72: xt = 0x40; break;
-        /* F7  */ case 73: xt = 0x41; break;
-        /* F8  */ case 74: xt = 0x42; break;
-        /* F9  */ case 75: xt = 0x43; break;
-        /* F10 */ case 76: xt = 0x44; break;
-        /* F11 */ case 95: xt = 0x57; break; // Не проверено
-        /* F12 */ case 96: xt = 0x58; break;
+        /* bs */ case 0x16: xt = key_BS; break;     // Back Space
+        /* sp */ case 0x41: xt = 0x20; break;       // Space
+        /* tb */ case 0x17: xt = key_TAB; break;    // Tab
+        /* ls */ case 0x32: xt = key_LSHIFT; break; // Left Shift
+        /* lc */ case 0x25: xt = key_LALT;  break;  // Left Ctrl
+        /* la */ case 0x40: xt = key_LCTRL; break;  // Left Alt
+        /* en */ case 0x24: xt = key_ENTER; break;  // Enter
+        /* es */ case 0x09: xt = key_ESC; break;    // Escape
+        /* es */ case 0x08: xt = key_ESC; break;
 
         // ---------------------------------------------
         // Специальные (не так же как в реальном железе)
         // ---------------------------------------------
 
-        /* UP  */  case 0x6F: xt = 0x60; break;
-        /* RT  */  case 0x72: xt = 0x61; break;
-        /* DN  */  case 0x74: xt = 0x62; break;
-        /* LF  */  case 0x71: xt = 0x64; break;
-        /* Home */ case 0x6E: xt = 0x6E; break;
-        /* End  */ case 0x73: xt = 0x6F; break;
-        /* PgUp */ case 0x70: xt = 0x55; break;
-        /* PgDn */ case 0x75: xt = 0x56; break;
-        /* Del  */ case 0x77: xt = 0x59; break;
-        /* Ins  */ case 0x76: xt = 0x5A; break;
-        /* NLock*/ case 0x4D: xt = 0x45; break;
-        /* Esc  */ case 0x08: xt = 0x01; break;
+        /* UP  */  case 0x6F: xt = key_UP; break;
+        /* RT  */  case 0x72: xt = key_RT; break;
+        /* DN  */  case 0x74: xt = key_DN; break;
+        /* LF  */  case 0x71: xt = key_LF; break;
+        /* Home */ case 0x6E: xt = key_HOME; break;
+        /* End  */ case 0x73: xt = key_END; break;
+        /* PgUp */ case 0x70: xt = key_PGUP; break;
+        /* PgDn */ case 0x75: xt = key_PGDN; break;
+        /* Del  */ case 0x77: xt = key_DEL; break;
+        /* Ins  */ case 0x76: xt = key_INS; break;
+        /* NLock*/ case 0x4D: xt = key_NL; break;
 
         default: return -k;
     }

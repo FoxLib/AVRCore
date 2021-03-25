@@ -23,9 +23,10 @@ module memctrl(
     input wire          ps2_hit
 );
 
-reg       keyb_up;
-reg [7:0] keyb_data;
-reg       keyb_latch;
+reg        keyb_up;
+reg  [7:0] keyb_data;
+wire [7:0] keyb_ascii;
+reg        keyb_latch;
 
 // Маршрутизация памяти
 always @* begin
@@ -80,7 +81,7 @@ always @(posedge clock50) begin
         if (ps2_data == 8'hF0) keyb_up <= 1'b1;
         else begin
 
-            keyb_data  <= ps2_data[7:0]; // keyb_up...
+            keyb_data  <= {keyb_up, keyb_ascii[6:0]};
             keyb_latch <= ~keyb_latch;
             keyb_up    <= 1'b0;
 
@@ -90,4 +91,13 @@ always @(posedge clock50) begin
 
 end
 
+// Конвертер AT -> ASCII
+at2ascii UnitAT2ASCII
+(
+    .at (ps2_data),
+    .xt (keyb_ascii)
+);
+
 endmodule
+
+`include "at2ascii.v"

@@ -1,0 +1,33 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Sun Jul 12 11:26:31 2020
+[*]
+[dumpfile] "/disk/fox/dev/fpgacpu/avr8mc3/mc3/main.vcd"
+[dumpfile_mtime] "Sun Jul 12 11:24:57 2020"
+[dumpfile_size] 87934
+[savefile] "/disk/fox/dev/fpgacpu/avr8mc3/mc3/main.gtkw"
+[timestart] 0
+[size] 1920 1029
+[pos] -1 -1
+*-5.000000 10 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] main.
+[sst_width] 243
+[signals_width] 196
+[sst_expanded] 1
+[sst_vpaned_height] 300
+@29
+[color] 2
+main.clk
+[color] 2
+main.clk25
+@22
+main.address[15:0]
+main.din[7:0]
+main.ir[15:0]
+main.pc[15:0]
+@28
+main.w
+@22
+main.wb[7:0]
+[pattern_trace] 1
+[pattern_trace] 0
