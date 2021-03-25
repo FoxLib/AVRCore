@@ -1,0 +1,61 @@
+module memctrl(
+
+    input  wire         clock,
+    input  wire [15:0]  address,
+    input  wire         wren,
+
+    // Внутрисхемная память
+    output reg  [7:0]   bank,
+    output reg  [7:0]   data_i,         // Выходящие данные в процессор AVR
+    input  wire [7:0]   data_o,         // Данные от процессора
+    input  wire [7:0]   data_o_sram,    // Данные из SRAM-памяти
+    input  wire [7:0]   data_o_text,    // Данные из TEXT-памяти
+    output reg          data_w_sram,    // Разрешение записи в память SRAM
+    output reg          data_w_text,    // Разрешение записи в память ROM
+
+    // Периферия
+    output reg  [7:0]   cursor_x,
+    output reg  [7:0]   cursor_y
+);
+
+// Маршрутизация памяти
+always @* begin
+
+    data_i      = data_o_sram;
+    data_w_sram = wren;
+    data_w_text = 1'b0;
+
+    // Запись в банки памяти
+    if (address >= 16'hF000)
+    casex (bank)
+
+        8'b0000001x: begin data_w_text = wren; data_w_sram = 1'b0; data_i = data_o_text; end
+        default:     begin data_w_sram = 1'b0; data_i = 8'hFF; end
+
+    endcase
+    // Чтение из портов
+    else case (address)
+
+        16'h20: data_i = bank;
+        16'h2C: data_i = cursor_x;
+        16'h2D: data_i = cursor_y;
+
+    endcase
+
+end
+
+// Регистрация записи и чтения в порты
+always @(negedge clock) begin
+
+    if (wren)
+    case (address)
+
+        16'h20: bank     <= data_o;
+        16'h2C: cursor_x <= data_o;
+        16'h2D: cursor_y <= data_o;
+
+    endcase
+
+end
+
+endmodule

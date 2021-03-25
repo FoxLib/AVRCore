@@ -79,6 +79,7 @@ assign HEX5 = 7'b1111111;
 wire locked;
 wire clock_25;
 wire clock_100;
+wire clock_cpu = clock_25 & locked;
 
 de0pll unit_pll
 (
@@ -95,10 +96,9 @@ de0pll unit_pll
 wire [15:0] pc;         // Программный счетчик
 reg  [15:0] ir;         // Регистр инструкции (текущий опкод)
 wire [15:0] address;    // Адрес в памяти SRAM
-reg  [ 7:0] data_i;     // Прочтенные данные из SRAM
+wire [ 7:0] data_i;     // Прочтенные данные из SRAM
 wire [ 7:0] data_o;     // Данные для записи в SRAM
 wire        wren;       // Разрешение на запись в память
-wire        clock_cpu = clock_25 & locked;
 
 avrcpu ModuleCPU
 (
@@ -120,51 +120,29 @@ avrcpu ModuleCPU
 // Контроллер памяти
 // ---------------------------------------------------------------------
 
-reg  [7:0]  bank = 0;     // Текущий банк памяти
+wire [7:0]  bank;
+wire        data_w_sram;
+wire        data_w_text;
 wire [7:0]  data_o_sram;
 wire [7:0]  data_o_text;
-reg         data_w_sram;  // Разрешение записи в SRAM
-reg         data_w_text;  // Разрешение на запись в TEXT
 
-// Маршрутизация памяти
-always @* begin
+memctrl UnitMemoryController(
 
-    data_i      = data_o_sram;
-    data_w_sram = wren;
-    data_w_text = 1'b0;
+    .clock          (clock_cpu),
+    .address        (address),
+    .wren           (wren),
 
-    // Запись в банки памяти
-    if (address >= 16'hF000)
-    casex (bank)
+    .bank           (bank),
+    .data_i         (data_i),
+    .data_o         (data_o),
+    .data_o_sram    (data_o_sram),
+    .data_o_text    (data_o_text),
+    .data_w_sram    (data_w_sram),
+    .data_w_text    (data_w_text),
 
-        8'b0000001x: begin data_w_text = wren; data_w_sram = 1'b0; data_i = data_o_text; end
-        default:     begin data_w_sram = 1'b0; data_i = 8'hFF; end
-
-    endcase
-    // Чтение из портов
-    else case (address)
-
-        16'h20: data_i = bank;
-        16'h2C: data_i = cursor_x;
-        16'h2D: data_i = cursor_y;
-
-    endcase
-
-end
-
-// Регистрация записи и чтения в порты
-always @(negedge clock_cpu) begin
-
-    if (wren)
-    case (address)
-
-        16'h20: bank <= data_o;
-        16'h2C: cursor_x <= data_o;
-        16'h2D: cursor_y <= data_o;
-
-    endcase
-
-end
+    .cursor_x       (cursor_x),
+    .cursor_y       (cursor_y),
+);
 
 // ---------------------------------------------------------------------
 // Модули внутрисхемной памяти
@@ -209,8 +187,8 @@ memtext UnitMemtext
 
 wire [12:0] text_address;
 wire [ 7:0] text_data;
-reg  [ 7:0] cursor_x;
-reg  [ 7:0] cursor_y;
+wire [ 7:0] cursor_x;
+wire [ 7:0] cursor_y;
 
 vga unit_vga
 (
@@ -233,3 +211,5 @@ vga unit_vga
 endmodule
 
 `include "../avrcpu.v"
+`include "../vga.v"
+`include "../memctrl.v"
