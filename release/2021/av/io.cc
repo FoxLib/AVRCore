@@ -83,17 +83,15 @@ void APP::put(int addr, unsigned char value) {
 
         // Курсор
         case 0x2C:
-
-            cursor_x = value;
-            update_text_xy(text_px, text_py);
-            update_text_xy(cursor_x, cursor_y);
-            break;
-
         case 0x2D:
 
-            cursor_y = value;
-            update_text_xy(text_px, text_py);
+            if (addr == 0x2C) cursor_x = value;
+            else              cursor_y = value;
+
+            update_text_xy(text_px,  text_py);
             update_text_xy(cursor_x, cursor_y);
+            text_px = cursor_x;
+            text_py = cursor_y;
             break;
 
         // SDRAM

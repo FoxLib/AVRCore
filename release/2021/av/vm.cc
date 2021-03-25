@@ -83,67 +83,6 @@ APP::APP() {
 // Деструктор
 APP::~APP() { free(sdram_data); }
 
-// Создание окна
-void APP::window(const char* caption) {
-
-    int w = config_width;
-    int h = config_height;
-
-    width  = w;
-    height = h;
-
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
-    SDL_EnableUNICODE(1);
-
-    sdl_screen = SDL_SetVideoMode(w, h, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
-    SDL_WM_SetCaption(caption, 0);
-
-    // @TODO переделать
-    SDL_AddTimer(1000 / clock_video, AVRDisplayTimer, NULL);
-}
-
-// Загрузка файла в память
-void APP::loadfile(const char* fn) {
-
-    FILE* fp = fopen(fn, "rb");
-    if (fp) {
-
-        fseek(fp, 0, SEEK_END);
-        int size = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
-        fread(program, 1, size, fp);
-        fclose(fp);
-
-    } else {
-
-        printf("Указанный файл не был найден\n");
-        exit(1);
-    }
-}
-
-// Загрузка конфигурации
-void APP::config() {
-
-    clock_mhz = 10;
-    clock_video = 50;
-    config_width = 1280;
-    config_height = 800;
-
-    FILE* fp = fopen("config.ini", "r");
-
-    if (fp) {
-
-        fscanf(fp, "%d", & clock_mhz);
-        fscanf(fp, "%d", & clock_video);
-        fscanf(fp, "%d %d", & config_width, & config_height);
-
-        // Инструкции за кадр
-        count_per_frame = (clock_mhz * 1000000) / clock_video;
-
-        fclose(fp);
-    }
-}
-
 // ---------------------------------------------------------------------
 // Главный обработчик приложения
 // ---------------------------------------------------------------------
@@ -466,6 +405,67 @@ void APP::main() {
         }
 
         SDL_Delay(1);
+    }
+}
+
+// Создание окна
+void APP::window(const char* caption) {
+
+    int w = config_width;
+    int h = config_height;
+
+    width  = w;
+    height = h;
+
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+    SDL_EnableUNICODE(1);
+
+    sdl_screen = SDL_SetVideoMode(w, h, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    SDL_WM_SetCaption(caption, 0);
+
+    // @TODO переделать
+    SDL_AddTimer(1000 / clock_video, AVRDisplayTimer, NULL);
+}
+
+// Загрузка файла в память
+void APP::loadfile(const char* fn) {
+
+    FILE* fp = fopen(fn, "rb");
+    if (fp) {
+
+        fseek(fp, 0, SEEK_END);
+        int size = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+        fread(program, 1, size, fp);
+        fclose(fp);
+
+    } else {
+
+        printf("Указанный файл не был найден\n");
+        exit(1);
+    }
+}
+
+// Загрузка конфигурации
+void APP::config() {
+
+    clock_mhz = 10;
+    clock_video = 50;
+    config_width = 1280;
+    config_height = 800;
+
+    FILE* fp = fopen("config.ini", "r");
+
+    if (fp) {
+
+        fscanf(fp, "%d", & clock_mhz);
+        fscanf(fp, "%d", & clock_video);
+        fscanf(fp, "%d %d", & config_width, & config_height);
+
+        // Инструкции за кадр
+        count_per_frame = (clock_mhz * 1000000) / clock_video;
+
+        fclose(fp);
     }
 }
 

@@ -48,9 +48,6 @@ void APP::update_text_xy(int X, int Y) {
                 }
         }
     }
-
-    text_px = X;
-    text_py = Y;
 }
 
 // 0xF000 - 0xFFFF Видеопамять
@@ -68,13 +65,12 @@ void APP::update_byte_scr(int addr) {
 
             if ((addr >= BASE_TEXT) && (addr < BASE_TEXT + 0xFA0)) {
 
-                addr = (addr - 0x10000) >> 1;
-                update_text_xy(text_px, text_py);
+                addr = (addr - BASE_TEXT) >> 1;
                 update_text_xy(addr % 80, addr / 80);
             }
             // Обновить весь дисплей - меняется цвет в палитре
-            else if ((addr >= BASE_TEXT + 0xFA0 && addr < BASE_TEXT + 0xFC0) ||  // Палитра
-                     (addr >= BASE_TEXT + 0x1000 && addr <= BASE_TEXT + 0x1FFF))   // Знакоместо
+            else if ((addr >= BASE_TEXT + 0x0FA0 && addr <  BASE_TEXT + 0x0FC0) ||  // Палитра
+                     (addr >= BASE_TEXT + 0x1000 && addr <= BASE_TEXT + 0x1FFF))    // Знакоместо
                      { require_disp_update = 1; }
 
             break;
@@ -90,7 +86,7 @@ void APP::display_update() {
 
     switch (videomode) {
 
-         // TEXT 80x25
+        // TEXT 80x25
         case 0:
 
             for (y = 0; y < 25; y++)

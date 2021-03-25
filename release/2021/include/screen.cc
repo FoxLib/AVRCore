@@ -40,12 +40,18 @@ public:
     // Переместить курсор
     void locate(byte x, byte y) {
 
-        outp(CURSOR_X, x);
-        outp(CURSOR_Y, y);
+        if (inp(CURSOR_Y) < 25) {
+            outp(CURSOR_X, x);
+            outp(CURSOR_Y, y);
+        }
 
         cursor_x = x;
         cursor_y = y;
     }
+
+    // Скрыть или показать курсор
+    void hide() { outp(CURSOR_Y, 25); }
+    void show() { outp(CURSOR_Y, cursor_y); }
 
     // Обновить палитру
     void palette(byte id, byte r, byte g, byte b) {
@@ -112,9 +118,11 @@ public:
     int print(const char* s) {
 
         int i = 0;
+        hide();
         while (s[i]) {
             print_char(s[i++]);
         }
+        show();
         return i;
     }
 
