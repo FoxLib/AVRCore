@@ -1,9 +1,13 @@
 #include <screen.cc>
 
-screen D;       // Инициализация текстового видеорежима
+screen D; // Инициализация текстового видеорежима
 
 int main() {
 
     D.cls(0x17);
+    D.locate(2, 1);
+    D.print("What's love? It's a happy! ");
+    D.print(-777333);
+
     for(;;);
 }
