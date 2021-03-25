@@ -129,9 +129,9 @@ wire [7:0]  data_o_text;
 memctrl UnitMemoryController(
 
     .clock          (clock_cpu),
+    .clock50        (CLOCK_50),
     .address        (address),
     .wren           (wren),
-
     .bank           (bank),
     .data_i         (data_i),
     .data_o         (data_o),
@@ -139,9 +139,10 @@ memctrl UnitMemoryController(
     .data_o_text    (data_o_text),
     .data_w_sram    (data_w_sram),
     .data_w_text    (data_w_text),
-
     .cursor_x       (cursor_x),
     .cursor_y       (cursor_y),
+    .ps2_data       (ps2_data),
+    .ps2_hit        (ps2_hit),
 );
 
 // ---------------------------------------------------------------------
@@ -208,8 +209,27 @@ vga unit_vga
     .cursor_y (cursor_y),
 );
 
+// ---------------------------------------------------------------------
+// Клавиатура
+// ---------------------------------------------------------------------
+
+wire [7:0] ps2_data;
+wire       ps2_hit;
+
+// Контроллер клавиатуры
+ps2keyboard keyb
+(
+    .CLOCK_50           (CLOCK_50),  // Тактовый генератор на 50 Мгц
+    .PS2_CLK            (PS2_CLK),   // Таймингс PS/2
+    .PS2_DAT            (PS2_DAT),   // Данные с PS/2
+    .received_data      (ps2_data),  // Принятые данные
+    .received_data_en   (ps2_hit),   // Нажата клавиша
+);
+
+
 endmodule
 
 `include "../avrcpu.v"
 `include "../vga.v"
 `include "../memctrl.v"
+`include "../keyboard.v"

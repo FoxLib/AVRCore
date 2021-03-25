@@ -9,5 +9,11 @@ int main() {
     D.print("What's love? It's a happy! ");
     D.print(-777333);
 
-    for(;;);
+    for(;;) {
+
+        int k = inp(0x01);
+        D.locate(2, 2);
+        D.print( k );
+        D.print("  ");
+    }
 }

@@ -865,10 +865,11 @@ always @(negedge clock) begin
         case (address)
 
             // Системные регистры
-            16'h005B: rampz     <= data_o; // Верхняя память ROM
-            16'h005D: sp[ 7:0]  <= data_o; // SPL
-            16'h005E: sp[15:8]  <= data_o; // SPH
-            16'h005F: sreg      <= data_o; // SREG
+            16'h0022: intr_maxtime  <= data_o; // Таймер для IRQ#1
+            16'h005B: rampz         <= data_o; // Верхняя память ROM
+            16'h005D: sp[ 7:0]      <= data_o; // SPL
+            16'h005E: sp[15:8]      <= data_o; // SPH
+            16'h005F: sreg          <= data_o; // SREG
 
             // Запись в регистры как в память
             default:  if (address < 16'h20) r[ address[4:0] ] <= data_o;
