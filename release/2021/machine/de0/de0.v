@@ -98,13 +98,12 @@ wire [15:0] address;    // Адрес в памяти SRAM
 reg  [ 7:0] data_i;     // Прочтенные данные из SRAM
 wire [ 7:0] data_o;     // Данные для записи в SRAM
 wire        wren;       // Разрешение на запись в память
-
-// @todo Роутинг памяти >> data_i
+wire        clock_cpu = clock_25 & locked;
 
 avrcpu ModuleCPU
 (
     // Тактовый генератор
-    .clock      (clock_25 & locked),
+    .clock      (clock_cpu),
 
     // Программная память
     .pc         (pc),           // Программный счетчик
@@ -126,7 +125,42 @@ wire [7:0]  data_o_sram;
 wire [7:0]  data_o_text;
 reg         data_w_sram;  // Разрешение записи в SRAM
 reg         data_w_text;  // Разрешение на запись в TEXT
-reg         bank_memtext; // =0 Char =1 Font
+
+// Маршрутизация памяти
+always @* begin
+
+    data_i      = data_o_sram;
+    data_w_sram = wren;
+    data_w_text = 1'b0;
+
+    // Запись в банки памяти
+    if (address >= 16'hF000)
+    casex (bank)
+
+        8'b0000001x: begin data_w_text = wren; data_w_sram = 1'b0; data_i = data_o_text; end
+        default:     begin data_w_sram = 1'b0; data_i = 8'hFF; end
+
+    endcase
+    // Чтение из портов
+    else case (address)
+
+        16'h20: data_i = bank;
+
+    endcase
+
+end
+
+// Регистрация записи и чтения в порты
+always @(negedge clock_cpu) begin
+
+    if (wren)
+    case (address)
+
+        16'h20: bank <= data_o;
+
+    endcase
+
+end
 
 // ---------------------------------------------------------------------
 // Модули внутрисхемной памяти
@@ -141,7 +175,7 @@ memflash UnitMemFlash
 );
 
 // BYTE 64k Общая оперативная память
-memsram UnitMemsram
+memsram UnitMemSram
 (
     .clock     (clock),
     .address_a (address),
@@ -154,7 +188,7 @@ memsram UnitMemsram
 memtext UnitMemtext
 (
     .clock     (clock),
-    .address_a ({bank_memtext, address[11:0]}),
+    .address_a ({bank[0], address[11:0]}),
     .address_b (text_address),
     .q_a       (data_o_text),
     .q_b       (text_data),

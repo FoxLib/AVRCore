@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define BASE_TEXT 0x11000 // 0xF000 + 2*1000h
+
 static const char* ds_brcs[4][8] = {
     {"cc", "ne", "pl", "vc", "ge", "hc", "tc", "id"},
     {"cs", "eq", "mi", "vs", "lt", "hs", "ts", "ie"},

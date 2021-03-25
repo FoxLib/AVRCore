@@ -13,27 +13,27 @@ void APP::update_text_xy(int X, int Y) {
     if (videomode)
         return;
 
-    // PAGE 1: Страница символов и палитры
-    // PAGE 2: Страница знакогенератора
+    // PAGE 2: Страница символов и палитры
+    // PAGE 3: Страница знакогенератора
 
     int k;
-    int addr = 0x10000 + 160*Y + 2*X;
-    int ch   = sram[ addr + 0 ];
-    int attr = sram[ addr + 1 ];
+    int addr = BASE_TEXT + (160*Y + 2*X);
+    int ch   = sram[addr + 0];
+    int attr = sram[addr + 1];
     int xshift = (width  - 640) / 2,
         yshift = (height - 400) / 2;
 
     for (int y = 0; y < 16; y++) {
 
-        int ft = sram[0x11000 + 16*ch + y];
+        int ft = sram[BASE_TEXT + 0x1000 + 16*ch + y];
         for (int x = 0; x < 8; x++) {
 
             int cbit  = ft & (1 << (7 - x));
             int cursor = (cursor_x == X && cursor_y == Y) && (y >= 14) ? 1 : 0;
             int color = cbit ^ (flash & cursor) ? (attr & 0x0F) : (attr >> 4);
 
-            int gb = sram[0x10FA0 + 2*color];
-            int  r = sram[0x10FA1 + 2*color];
+            int gb = sram[BASE_TEXT + 0xFA0 + 2*color];
+            int  r = sram[BASE_TEXT + 0xFA1 + 2*color];
 
             // Вычисляется цвет
             color = ((gb & 0x0F) << 4) | ((gb & 0xF0) << 8) | ((r & 0x0F) << 20);
@@ -66,15 +66,15 @@ void APP::update_byte_scr(int addr) {
         // TEXT 80x25
         case 0:
 
-            if ((addr >= 0x10000) && (addr < 0x10FA0)) {
+            if ((addr >= BASE_TEXT) && (addr < BASE_TEXT + 0xFA0)) {
 
                 addr = (addr - 0x10000) >> 1;
                 update_text_xy(text_px, text_py);
                 update_text_xy(addr % 80, addr / 80);
             }
             // Обновить весь дисплей - меняется цвет в палитре
-            else if ((addr >= 0x10FA0 && addr < 0x10FC0) ||  // Палитра
-                     (addr >= 0x11000 && addr <= 0x11FFF))   // Знакоместо
+            else if ((addr >= BASE_TEXT + 0xFA0 && addr < BASE_TEXT + 0xFC0) ||  // Палитра
+                     (addr >= BASE_TEXT + 0x1000 && addr <= BASE_TEXT + 0x1FFF))   // Знакоместо
                      { require_disp_update = 1; }
 
             break;
