@@ -157,6 +157,7 @@ void APP::main() {
     while (1) {
 
         int do_frame_event = 0;
+        require_disp_update = 0;
 
         while (SDL_PollEvent(& event)) {
 
@@ -259,6 +260,7 @@ void APP::main() {
 
                             cpu_halt = 0;
                             ds_debugger = 0;
+                            require_disp_update = 1;
                             update_screen();
                         }
                         // Послать сигнал остановки
@@ -404,7 +406,6 @@ void APP::main() {
         if (do_frame_event) {
 
             timer = (timer + 20);
-            require_disp_update = 0;
 
             // Перерисовка полного экрана
             if (++flash_id > 10) { flash_id = 0; flash ^= 1; require_disp_update = 1; }
@@ -1199,13 +1200,13 @@ void APP::assign() {
         int gc = (DOS_13[i] & 0xF000) >> 8;
         int rc = (DOS_13[i] & 0xF00000) >> 20;
 
-        sram[0xFFA0 + 2*i] = bc | gc;
-        sram[0xFFA1 + 2*i] = rc;
+        sram[BASE_TEXT + 0xFA0 + 2*i] = bc | gc;
+        sram[BASE_TEXT + 0xFA1 + 2*i] = rc;
     }
 
     // Скопировать FontROM (Bank 1)
     for (i = 0; i < 4096; i++) {
-        sram[0x10000 + i] = ansi16[i >> 4][i & 15];
+        sram[BASE_TEXT + 0x1000 + i] = ansi16[i >> 4][i & 15];
     }
 
     // Арифметические на 2 регистра

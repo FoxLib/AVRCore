@@ -112,7 +112,7 @@ void APP::put(int addr, unsigned char value) {
     }
 
     // Нарисовать на холсте
-    if (addr >= 0xC000) { update_byte_scr(addr); }
+    if (addr >= 0xF000) { update_byte_scr(addr); }
 }
 
 // ---------------------------------------------------------------------

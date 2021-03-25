@@ -53,7 +53,7 @@ void APP::update_text_xy(int X, int Y) {
     text_py = Y;
 }
 
-// 0xC000 - 0xFFFF Видеопамять
+// 0xF000 - 0xFFFF Видеопамять
 void APP::update_byte_scr(int addr) {
 
     int xshift = (width  - 640) / 2,

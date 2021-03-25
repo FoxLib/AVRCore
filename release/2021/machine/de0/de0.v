@@ -145,6 +145,8 @@ always @* begin
     else case (address)
 
         16'h20: data_i = bank;
+        16'h2C: data_i = cursor_x;
+        16'h2D: data_i = cursor_y;
 
     endcase
 
@@ -157,6 +159,8 @@ always @(negedge clock_cpu) begin
     case (address)
 
         16'h20: bank <= data_o;
+        16'h2C: cursor_x <= data_o;
+        16'h2D: cursor_y <= data_o;
 
     endcase
 
@@ -205,6 +209,8 @@ memtext UnitMemtext
 
 wire [12:0] text_address;
 wire [ 7:0] text_data;
+reg  [ 7:0] cursor_x;
+reg  [ 7:0] cursor_y;
 
 vga unit_vga
 (
@@ -217,11 +223,11 @@ vga unit_vga
 
     // Доступ к памяти
     .text_address (text_address),
-    .text_data    (text_data)
+    .text_data    (text_data),
 
     // Курсор
-    // input   wire [7:0]  cursor_x,
-    // input   wire [7:0]  cursor_y,
+    .cursor_x (cursor_x),
+    .cursor_y (cursor_y),
 );
 
 endmodule
