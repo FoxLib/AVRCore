@@ -8,7 +8,7 @@ all:
 	avr-objdump -S main.elf > main.lst
 	avr-size -C --mcu=$(DEVICE) main.elf > mem.map
 	rm main.elf
-	avr main.bin
+	../../av/avr main.bin
 
 clean:
 	rm -f *.o rm *.elf *.lst *.bin *.map

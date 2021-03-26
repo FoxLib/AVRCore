@@ -16,6 +16,11 @@ int main() {
     D.print("What's love? It's a happy! ");
 
     for(;;) {
+
+        //D.locate(0, 0);
+        //D.print(inp(TIMERL) + (word)256*inp(TIMERH));
+        //D.print("   ");
+
         D.print_char( K.getch() );
     }
 }

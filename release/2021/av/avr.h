@@ -162,6 +162,7 @@ protected:
     int  videomode;
     int  port_keyb_hit;
     int  port_keyb_xt;
+    int  key_shift;
     int  text_px, text_py;
     int  cursor_x, cursor_y, flash, flash_id, require_disp_update;
     int  mouse_x, mouse_y, mouse_cmd;
@@ -202,6 +203,7 @@ public:
     void swi_brk();
     int  get_mouse_x();
     int  get_mouse_y();
+    int  upper(int k);
 
     // Рисование на экране
     void pset(int x, int y, uint color);

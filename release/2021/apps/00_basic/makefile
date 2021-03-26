@@ -1,3 +1,4 @@
+# https://gcc.gnu.org/onlinedocs/gcc/AVR-Options.html
 DEVICE  = atmega103
 OPTIONS = -Os -DF_CPU=25000000 -mmcu=$(DEVICE)
 INCLUDE = -I../../include

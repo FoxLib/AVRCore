@@ -49,6 +49,7 @@ APP::APP() {
 
     // Клавиатура
     port_keyb_hit   = 0;
+    key_shift       = 0;
 
     // Дисплей
     require_disp_update = 0;
@@ -156,10 +157,12 @@ void APP::main() {
                     // Режим обычной работы процессора
                     if (!ds_debugger && !cpu_halt) {
 
+                        if (keyid == key_LSHIFT) key_shift = 1;
+
                         if (keyid > 0) {
 
                             port_keyb_hit ^= 1;
-                            port_keyb_xt   = keyid;
+                            port_keyb_xt   = upper(keyid);
                         }
                     }
 
@@ -299,8 +302,8 @@ void APP::main() {
                     // Горячие клавиши
                     if (ds_debugger && ds_tab == 1) {
 
-                        if (keyid == 'R') /* R */ ds_dump_cursor = ds_dump_start = 0x0000;
-                        if (keyid == 'V') /* V */ ds_dump_cursor = ds_dump_start = 0xc000;
+                        if (keyid == 'r') /* R */ ds_dump_cursor = ds_dump_start = 0x0000;
+                        if (keyid == 'v') /* V */ ds_dump_cursor = ds_dump_start = 0xc000;
 
                         ds_update();
                     }
@@ -308,7 +311,7 @@ void APP::main() {
                     // Нажатие горящей путевки в режиме ds_tab
                     if (ds_debugger && ds_tab == 0) {
 
-                        if (keyid == 'R') /* R */ {
+                        if (keyid == 'r') /* R */ {
 
                             pc = ds_start = ds_cursor = 0;
                             instr_counter = 0;
@@ -327,10 +330,12 @@ void APP::main() {
                     // Клавиша отпускается
                     if (!ds_debugger && !cpu_halt) {
 
+                        if (keyid == key_LSHIFT) key_shift = 0;
+
                         if (keyid > 0) {
 
                             port_keyb_hit ^= 1;
-                            port_keyb_xt   = 0x80 | keyid;
+                            port_keyb_xt   = 0x80 | upper(keyid);
                         }
                     }
 
@@ -406,6 +411,40 @@ void APP::main() {
 
         SDL_Delay(1);
     }
+}
+
+// В зависимости от нажатого SHIFT
+int APP::upper(int k) {
+
+    if (key_shift == 0) return k;
+    if (k >= 'a' && k <= 'z') return k + ('A' - 'a');
+
+    switch (k) {
+
+        case '0':  return ')';
+        case '1':  return '!';
+        case '2':  return '@';
+        case '3':  return '#';
+        case '4':  return '$';
+        case '5':  return '%';
+        case '6':  return '^';
+        case '7':  return '&';
+        case '8':  return '*';
+        case '9':  return '(';
+        case '`':  return '~';
+        case '-':  return '_';
+        case '=':  return '+';
+        case '\\': return '|';
+        case '[':  return '{';
+        case ']':  return '}';
+        case ';':  return ':';
+        case '\'': return '"';
+        case ',':  return '<';
+        case '.':  return '>';
+        case '/':  return '?';
+    }
+
+    return k;
 }
 
 // Создание окна
@@ -527,43 +566,43 @@ int APP::get_key(SDL_Event event) {
 
     switch (k) {
 
-        /* A */ case 0x26: xt = 0x41; break;
-        /* B */ case 0x38: xt = 0x42; break;
-        /* C */ case 0x36: xt = 0x43; break;
-        /* D */ case 0x28: xt = 0x44; break;
-        /* E */ case 0x1a: xt = 0x45; break;
-        /* F */ case 0x29: xt = 0x46; break;
-        /* G */ case 0x2a: xt = 0x47; break;
-        /* H */ case 0x2b: xt = 0x48; break;
-        /* I */ case 0x1f: xt = 0x49; break;
-        /* J */ case 0x2c: xt = 0x4A; break;
-        /* K */ case 0x2d: xt = 0x4B; break;
-        /* L */ case 0x2e: xt = 0x4C; break;
-        /* M */ case 0x3a: xt = 0x4D; break;
-        /* N */ case 0x39: xt = 0x4E; break;
-        /* O */ case 0x20: xt = 0x4F; break;
-        /* P */ case 0x21: xt = 0x50; break;
-        /* Q */ case 0x18: xt = 0x51; break;
-        /* R */ case 0x1b: xt = 0x52; break;
-        /* S */ case 0x27: xt = 0x53; break;
-        /* T */ case 0x1c: xt = 0x54; break;
-        /* U */ case 0x1e: xt = 0x55; break;
-        /* V */ case 0x37: xt = 0x56; break;
-        /* W */ case 0x19: xt = 0x57; break;
-        /* X */ case 0x35: xt = 0x58; break;
-        /* Y */ case 0x1d: xt = 0x59; break;
-        /* Z */ case 0x34: xt = 0x5A; break;
+        /* A */ case 0x26: xt = 'a'; break;
+        /* B */ case 0x38: xt = 'b'; break;
+        /* C */ case 0x36: xt = 'c'; break;
+        /* D */ case 0x28: xt = 'd'; break;
+        /* E */ case 0x1a: xt = 'e'; break;
+        /* F */ case 0x29: xt = 'f'; break;
+        /* G */ case 0x2a: xt = 'g'; break;
+        /* H */ case 0x2b: xt = 'h'; break;
+        /* I */ case 0x1f: xt = 'i'; break;
+        /* J */ case 0x2c: xt = 'j'; break;
+        /* K */ case 0x2d: xt = 'k'; break;
+        /* L */ case 0x2e: xt = 'l'; break;
+        /* M */ case 0x3a: xt = 'm'; break;
+        /* N */ case 0x39: xt = 'n'; break;
+        /* O */ case 0x20: xt = 'o'; break;
+        /* P */ case 0x21: xt = 'p'; break;
+        /* Q */ case 0x18: xt = 'q'; break;
+        /* R */ case 0x1b: xt = 'r'; break;
+        /* S */ case 0x27: xt = 's'; break;
+        /* T */ case 0x1c: xt = 't'; break;
+        /* U */ case 0x1e: xt = 'u'; break;
+        /* V */ case 0x37: xt = 'v'; break;
+        /* W */ case 0x19: xt = 'w'; break;
+        /* X */ case 0x35: xt = 'x'; break;
+        /* Y */ case 0x1d: xt = 'y'; break;
+        /* Z */ case 0x34: xt = 'z'; break;
 
-        /* 0 */ case 0x13: xt = 0x30; break;
-        /* 1 */ case 0x0A: xt = 0x31; break;
-        /* 2 */ case 0x0B: xt = 0x32; break;
-        /* 3 */ case 0x0C: xt = 0x33; break;
-        /* 4 */ case 0x0D: xt = 0x34; break;
-        /* 5 */ case 0x0E: xt = 0x35; break;
-        /* 6 */ case 0x0F: xt = 0x36; break;
-        /* 7 */ case 0x10: xt = 0x37; break;
-        /* 8 */ case 0x11: xt = 0x38; break;
-        /* 9 */ case 0x12: xt = 0x39; break;
+        /* 0 */ case 0x13: xt = '0'; break;
+        /* 1 */ case 0x0A: xt = '1'; break;
+        /* 2 */ case 0x0B: xt = '2'; break;
+        /* 3 */ case 0x0C: xt = '3'; break;
+        /* 4 */ case 0x0D: xt = '4'; break;
+        /* 5 */ case 0x0E: xt = '5'; break;
+        /* 6 */ case 0x0F: xt = '6'; break;
+        /* 7 */ case 0x10: xt = '7'; break;
+        /* 8 */ case 0x11: xt = '8'; break;
+        /* 9 */ case 0x12: xt = '9'; break;
 
         /* ` */ case 0x31: xt = 0x60; break;
         /* - */ case 0x14: xt = 0x2D; break;

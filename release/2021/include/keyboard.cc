@@ -23,7 +23,7 @@ public:
             _phit  = status;
             status = inp(KEYB);
 
-        } while (status & 0x80);
+        } while (status & 0x80 || status < 0x04);
 
         return status & 0x7F;
     }

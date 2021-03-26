@@ -27,6 +27,7 @@ reg        keyb_up;
 reg  [7:0] keyb_data;
 wire [7:0] keyb_ascii;
 reg        keyb_latch;
+reg        keyb_shift;
 
 // Маршрутизация памяти
 always @* begin
@@ -72,14 +73,20 @@ always @(negedge clock) begin
 
 end
 
-// Прием символа с клавиатуры [пока что в RAW-виде в данный момент]
+// Прием символа с клавиатуры
 always @(posedge clock50) begin
 
     if (ps2_hit) begin
 
-        // Клавиша отпущена
+        // Клавиша была отпущена
         if (ps2_data == 8'hF0) keyb_up <= 1'b1;
+
+        // Все остальные клавиши
         else begin
+
+            // Левый или правый SHIFT
+            if (ps2_data == 8'h12 || ps2_data == 8'h59)
+                keyb_shift <= ~keyb_up;
 
             keyb_data  <= {keyb_up, keyb_ascii[6:0]};
             keyb_latch <= ~keyb_latch;
@@ -94,8 +101,9 @@ end
 // Конвертер AT -> ASCII
 at2ascii UnitAT2ASCII
 (
-    .at (ps2_data),
-    .xt (keyb_ascii)
+    .at     (ps2_data),
+    .ascii  (keyb_ascii),
+    .shift  (keyb_shift)
 );
 
 endmodule
