@@ -77,9 +77,9 @@ int main() {
     byte bounce;
     int  tex_id;
 
-    byte cl11 = G.rgb( 32,  32, 255);
-    byte cl22 = G.rgb( 32, 128,  32);
-    byte cl88 = G.rgb(128, 128, 128);
+    byte cl11  = G.rgb( 32,  32, 255);
+    byte cl22  = G.rgb( 32, 128,  32);
+    byte cl22h = G.rgb( 16,  64,  16);
 
     heap(vm, 0xf000);
 
@@ -163,7 +163,7 @@ int main() {
                     word z = i + 160;
 
                     // Вычисление Y = PPD / Z
-                    t = 100.0 / t;
+                    t      = 100.0 / t;
                     tex_id = map[yi][xi] - 1;
 
                     // Границы
@@ -194,16 +194,23 @@ int main() {
 
                             // Целочисленное вычисление положения текстуры
                             tym += 32; while (tym > dty) { tym -= dty; ty++; }
+                            cc = tex[tex_id][ty&15][tx&15];
 
-                            // Вычисление картинки
-                            if ((((i>>1) ^ k) & 1) && t < 50) {
-                                cc = t > 30 ? cl88 : 0x00;
-                            } else {
-                                cc = tex[tex_id][ty&15][tx&15];
+                            // Затенение
+                            if (t < 70) {
+
+                                if (t > 35)
+                                     cc = (cc >> 1) & 0b01101101;
+                                else cc = (cc >> 2) & 0b00100100;
                             }
                         }
-                        // Рисовать пол
-                        else cc = cl22;
+                        // Рисовать пол с затенением
+                        else {
+
+                            if (k < 135) cc = 0;
+                            else if (k < 170) cc = cl22h;
+                            else cc = cl22;
+                        }
 
                         // Более скоростное рисование
                         vm[z]   = cc;
