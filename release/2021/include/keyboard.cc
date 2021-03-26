@@ -18,7 +18,7 @@ public:
         do {
 
             // Ожидать смены клавиши
-            while ((((status = inp(STATUS)) ^ _phit) & 1) == 0);
+            while (((status = inp(STATUS)) & 15) == _phit);
 
             _phit  = status;
             status = inp(KEYB);

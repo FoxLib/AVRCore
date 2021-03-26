@@ -183,8 +183,8 @@ void APP::main() {
 
                         if (keyid > 0) {
 
-                            port_keyb_hit ^= 1;
-                            port_keyb_xt   = upper(keyid);
+                            port_keyb_hit = (port_keyb_hit + 1) & 15;
+                            port_keyb_xt  = upper(keyid);
                         }
                     }
 
@@ -356,7 +356,7 @@ void APP::main() {
 
                         if (keyid > 0) {
 
-                            port_keyb_hit ^= 1;
+                            port_keyb_hit = (port_keyb_hit + 1) & 15;
                             port_keyb_xt   = 0x80 | upper(keyid);
                         }
                     }

@@ -31,7 +31,7 @@ module memctrl(
 reg        keyb_up;
 reg  [7:0] keyb_data;
 wire [7:0] keyb_ascii;
-reg        keyb_latch;
+reg  [3:0] keyb_latch;
 reg        keyb_shift;
 
 // Маршрутизация памяти
@@ -56,7 +56,13 @@ always @* begin
 
         /* BANK   */ 16'h20: data_i = bank;
         /* KEYB   */ 16'h21: data_i = keyb_data;
-        /* STATUS */ 16'h22: data_i = {/*0*/keyb_latch};
+        /* STATUS */ 16'h22: data_i = {
+            /*  7*/ 1'b0, // DRAM-WE
+            /*  6*/ 1'b0, // DRAM busy
+            /*  5*/ 1'b0, // SPI busy
+            /*  4*/ 1'b0,
+            /*3:0*/ keyb_latch,
+        };
         /* CURSX  */ 16'h2C: data_i = cursor_x;
         /* CURSY  */ 16'h2D: data_i = cursor_y;
         /* VIDEO  */ 16'h38: data_i = videomode;
@@ -97,7 +103,7 @@ always @(posedge clock50) begin
                 keyb_shift <= ~keyb_up;
 
             keyb_data  <= {keyb_up, keyb_ascii[6:0]};
-            keyb_latch <= ~keyb_latch;
+            keyb_latch <= keyb_latch + 1;
             keyb_up    <= 1'b0;
 
         end
