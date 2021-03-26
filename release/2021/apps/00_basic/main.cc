@@ -29,7 +29,7 @@ void graph() {
     G.screen(2);
 
     heap(vm, 0xf000);
-    for (int b = 0; b < 0x30; b++) {
+    for (int b = 0x20; b < 0x30; b++) {
 
         bank(b);
         for (int k = 0; k < 4096; k++)

@@ -8,17 +8,17 @@ module vga
     output  wire        VGA_VS,
 
     // Видеорежим
-    input   wire [7:0]  videomode,
+    input   wire [ 7:0] videomode,
 
     // Текущее положение курсора
-    input   wire [7:0]  cursor_x,
-    input   wire [7:0]  cursor_y,
+    input   wire [ 7:0] cursor_x,
+    input   wire [ 7:0] cursor_y,
 
     // Доступ к текстовой видеопамяти 8k
-    output  reg [12:0]  text_address,
-    input   wire [7:0]  text_data,
-    output  reg [16:0]  grph_address,
-    input   wire [7:0]  grph_data
+    output  reg  [12:0] text_address,
+    input   wire [ 7:0] text_data,
+    output  reg  [16:0] grph_address,
+    input   wire [ 7:0] grph_data
 );
 
 // ---------------------------------------------------------------------

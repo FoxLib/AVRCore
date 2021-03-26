@@ -127,6 +127,7 @@ wire        data_w_grph;
 wire [7:0]  data_o_sram;
 wire [7:0]  data_o_text;
 wire [7:0]  data_o_grph;
+wire [7:0]  videomode;
 
 memctrl UnitMemoryController(
 

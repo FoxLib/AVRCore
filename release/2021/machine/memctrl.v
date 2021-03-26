@@ -40,6 +40,7 @@ always @* begin
     data_i      = data_o_sram;
     data_w_sram = wren;
     data_w_text = 1'b0;
+    data_w_grph = 1'b0;
 
     // Запись в банки памяти
     if (address >= 16'hF000)
