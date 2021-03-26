@@ -91,3 +91,9 @@ F000h-FFFFh Банки памяти
 ```
 sudo apt install libsdl1.2-dev make gcc g++ arduino
 ```
+Потом необходимо откомпилировать его
+```
+cd release/2021/av
+make
+```
+Запускать отладчик можно через `avr file.bin`
