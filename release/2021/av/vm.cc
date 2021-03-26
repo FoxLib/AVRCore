@@ -489,9 +489,9 @@ void APP::loadfile(const char* fn) {
 // Загрузка конфигурации
 void APP::config() {
 
-    clock_mhz = 10;
-    clock_video = 50;
-    config_width = 1280;
+    clock_mhz     = 50;
+    clock_video   = 50;
+    config_width  = 1280;
     config_height = 800;
 
     FILE* fp = fopen("config.ini", "r");
@@ -501,12 +501,11 @@ void APP::config() {
         fscanf(fp, "%d", & clock_mhz);
         fscanf(fp, "%d", & clock_video);
         fscanf(fp, "%d %d", & config_width, & config_height);
-
-        // Инструкции за кадр
-        count_per_frame = (clock_mhz * 1000000) / clock_video;
-
         fclose(fp);
     }
+
+    // Инструкции за кадр
+    count_per_frame = (clock_mhz * 1000000) / clock_video;
 }
 
 // Положение курсора мыши X

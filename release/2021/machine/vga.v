@@ -52,7 +52,8 @@ wire [ 9:0] Y    = y - vt_back;     // Y=[0..399]
 
 // Вычисление позиции курсора, его наличие.
 wire        cursor   = ((cursor_x + 1 == X[9:3]) && (cursor_y == Y[9:4])) && (Y[3:0] >= 14);
-wire [15:0] cursor_g = 320*Y[9:1] + XG[10:1];
+wire [15:0] cursor_g = 320*Y[9:1] + XG[10:1]; // 320x200
+wire [16:0] cursor_h = 320*Y      + XG[10:1]; // 640x400
 
 // Рендеринг шрифта
 wire        cubit = font_data[ 3'h7 ^ X[2:0] ];
@@ -112,6 +113,9 @@ always @(posedge CLOCK) begin
 
     // Графические режимы
     case (videomode)
+
+        // 640x400x16
+        // 1: case (XG[0]) 0: grph_address <= ...; 1: color_640 <= grph_data; endcase
 
         // 320x200x256
         2, 3: case (XG[0])
