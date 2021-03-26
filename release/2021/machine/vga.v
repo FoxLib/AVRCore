@@ -133,7 +133,13 @@ always @(posedge CLOCK) begin
     begin
 
         case (videomode)
-        2, 3:    {VGA_R, VGA_G, VGA_B} <= {color_320[7:5],1'b0, color_320[4:2],1'b0, color_320[1:0],2'b00 }; // 3:3:2
+        2, 3:    {VGA_R, VGA_G, VGA_B} <=
+        {   // 3:3:2
+            color_320[7:5],color_320[5],             // 3
+            color_320[4:2],color_320[2],             // 3
+            color_320[1:0],color_320[0],color_320[0] // 2
+        };
+
         default: {VGA_R, VGA_G, VGA_B} <= color;
         endcase
 
