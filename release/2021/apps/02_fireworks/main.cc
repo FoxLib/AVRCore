@@ -13,15 +13,17 @@ struct pt {
 
 struct pt fp[320];
 
-dword rand() {
+word rand() {
 
-    random_id = (random_id * 15623) + 7;
+    random_id = (random_id * 1103515245) + 12345;
     return random_id;
 }
 
 int main() {
 
     heap(vm, 0xf000);
+
+    random_id = inp(TIMERL);
 
     G.screen(0);
     for (;;) {
@@ -63,18 +65,15 @@ int main() {
 
                     if (fp[i].lt == 0) {
 
-                        // v = rand()
-                        float v = (float)(rand() % 255) / 256;
+                        float v = (float)(rand() % 255) / 512 + 0.5;
                         fp[i].x = rx;
                         fp[i].y = ry;
-                        fp[i].sx = sin((float)i / 32.0) * v;
-                        fp[i].sy = cos((float)i / 32.0) * v;
+                        fp[i].sx = sin((float)i) * v;
+                        fp[i].sy = cos((float)i) * v;
                         fp[i].lt = rand()%64 + 192;
                     }
                 }
             }
-
         }
-
     }
 }
