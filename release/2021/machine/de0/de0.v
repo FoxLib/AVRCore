@@ -183,7 +183,7 @@ memtext UnitMemtext
     .wren_a    (data_w_text),
 );
 
-// 128k Видеопамять графического режима
+// BYTE 128k Видеопамять графического режима
 memvideo UnitMemvideo
 (
     .clock     (clock),

@@ -50,11 +50,11 @@ always @* begin
     // Чтение из портов
     else case (address)
 
-        16'h20: data_i = bank;
-        16'h21: data_i = keyb_data;             // KEYB
-        16'h22: data_i = {/*0*/keyb_latch};          // STATUS
-        16'h2C: data_i = cursor_x;
-        16'h2D: data_i = cursor_y;
+        /* BANK   */ 16'h20: data_i = bank;
+        /* KEYB   */ 16'h21: data_i = keyb_data;
+        /* STATUS */ 16'h22: data_i = {/*0*/keyb_latch};
+        /* CURSX  */ 16'h2C: data_i = cursor_x;
+        /* CURSY  */ 16'h2D: data_i = cursor_y;
 
     endcase
 
