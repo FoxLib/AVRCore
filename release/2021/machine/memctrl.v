@@ -22,7 +22,10 @@ module memctrl(
 
     // Клавиатура
     input wire  [7:0]   ps2_data,
-    input wire          ps2_hit
+    input wire          ps2_hit,
+
+    // Видеорежим
+    output reg  [7:0]   videomode
 );
 
 reg        keyb_up;
@@ -55,6 +58,7 @@ always @* begin
         /* STATUS */ 16'h22: data_i = {/*0*/keyb_latch};
         /* CURSX  */ 16'h2C: data_i = cursor_x;
         /* CURSY  */ 16'h2D: data_i = cursor_y;
+        /* VIDEO  */ 16'h38: data_i = videomode;
 
     endcase
 
@@ -66,11 +70,11 @@ always @(negedge clock) begin
     if (wren)
     case (address)
 
-        16'h20: bank     <= data_o;
+        16'h20: bank      <= data_o;
         // 16'h22: // SDRAM WE
-        16'h2C: cursor_x <= data_o;
-        16'h2D: cursor_y <= data_o;
-        // 16'h38: // VIDEOMODE
+        16'h2C: cursor_x  <= data_o;
+        16'h2D: cursor_y  <= data_o;
+        16'h38: videomode <= data_o;
 
     endcase
 

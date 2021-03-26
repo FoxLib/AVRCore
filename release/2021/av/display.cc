@@ -53,14 +53,12 @@ void APP::update_text_xy(int X, int Y) {
 // 0xF000 - 0xFFFF Видеопамять
 void APP::update_byte_scr(int addr) {
 
-    int xshift = (width  - 640) / 2,
-        yshift = (height - 400) / 2;
-
+    int base, x, y, v;
     if (ds_debugger) return;
 
     switch (videomode) {
 
-        // TEXT 80x25
+        // 80x25
         case 0:
 
             if ((addr >= BASE_TEXT) && (addr < BASE_TEXT + 0xFA0)) {
@@ -72,6 +70,23 @@ void APP::update_byte_scr(int addr) {
             else if ((addr >= BASE_TEXT + 0x0FA0 && addr <  BASE_TEXT + 0x0FC0) ||  // Палитра
                      (addr >= BASE_TEXT + 0x1000 && addr <= BASE_TEXT + 0x1FFF))    // Знакоместо
                      { require_disp_update = 1; }
+
+            break;
+
+        // 320x200x8
+        case 2:
+        case 3:
+
+            base = 0xF000 + 4096*(videomode == 3 ? 0x30 : 0x20);
+            if ((addr >= base) && (addr < base + 65536)) {
+
+                v = sram[addr];
+                addr -= base;
+                x = addr % 320;
+                y = addr / 320;
+                v = ((v&3)<<6) | ((v&0x1C)<<11) | ((v&0xE0)<<16);
+                for (int k = 0; k < 16; k++) pset(4*x + (k&3), 4*y + (k>>2), v);
+            }
 
             break;
     }
@@ -94,6 +109,9 @@ void APP::display_update() {
                 update_text_xy(x, y);
 
             break;
+
+        case 2: for (k = 0; k < 65536; k++) update_byte_scr(0xF000 + 0x20*4096); break;
+        case 3: for (k = 0; k < 65536; k++) update_byte_scr(0xF000 + 0x30*4096); break;
     }
 }
 

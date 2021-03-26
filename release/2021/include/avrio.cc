@@ -26,7 +26,9 @@ enum EnumPORTSID {
 // Список видеорежимов
 enum EnumVIDEOMODES {
 
-    VIDEOMODE_80x25 = 0,
+    VIDEOMODE_80x25       = 0,
+    VIDEOMODE_320x200x8_0 = 2,
+    VIDEOMODE_320x200x8_1 = 3,
 };
 
 enum EnumSPICommands {

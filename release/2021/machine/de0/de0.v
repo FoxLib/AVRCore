@@ -147,6 +147,7 @@ memctrl UnitMemoryController(
     .cursor_y       (cursor_y),
     .ps2_data       (ps2_data),
     .ps2_hit        (ps2_hit),
+    .videomode      (videomode),
 );
 
 // ---------------------------------------------------------------------
@@ -188,9 +189,9 @@ memvideo UnitMemvideo
 (
     .clock     (clock),
     .address_a ({bank[4:0], address[11:0]}),
-    //.address_b (address_b),
+    .address_b (grph_address),
     .q_a       (data_o_grph),
-    //.q_b       (q_b),
+    .q_b       (grph_data),
     .data_a    (data_o),
     .wren_a    (data_w_grph),
 );
@@ -205,6 +206,8 @@ wire [12:0] text_address;
 wire [ 7:0] text_data;
 wire [ 7:0] cursor_x;
 wire [ 7:0] cursor_y;
+wire [16:0] grph_address;
+wire [ 7:0] grph_data;
 
 vga unit_vga
 (
@@ -215,9 +218,13 @@ vga unit_vga
     .VGA_HS (VGA_HS),
     .VGA_VS (VGA_VS),
 
+    .videomode    (videomode),
+
     // Доступ к памяти
     .text_address (text_address),
     .text_data    (text_data),
+    .grph_address (grph_address),
+    .grph_data    (grph_data),
 
     // Курсор
     .cursor_x (cursor_x),

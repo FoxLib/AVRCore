@@ -7,13 +7,18 @@ module vga
     output  wire        VGA_HS,
     output  wire        VGA_VS,
 
+    // Видеорежим
+    input   wire [7:0]  videomode,
+
     // Текущее положение курсора
     input   wire [7:0]  cursor_x,
     input   wire [7:0]  cursor_y,
 
     // Доступ к текстовой видеопамяти 8k
     output  reg [12:0]  text_address,
-    input   wire [7:0]  text_data
+    input   wire [7:0]  text_data,
+    output  reg [16:0]  grph_address,
+    input   wire [7:0]  grph_data
 );
 
 // ---------------------------------------------------------------------
@@ -42,10 +47,12 @@ wire        ymax = (y == vt_whole - 1);
 reg  [10:0] x    = 0;
 reg  [10:0] y    = 0;
 wire [10:0] X    = x - hz_back + 8; // X=[0..639]
+wire [10:0] XG   = x - hz_back + 2;
 wire [ 9:0] Y    = y - vt_back;     // Y=[0..399]
 
 // Вычисление позиции курсора, его наличие.
-wire       cursor   = ((cursor_x + 1 == X[9:3]) && (cursor_y == Y[9:4])) && (Y[3:0] >= 14);
+wire        cursor   = ((cursor_x + 1 == X[9:3]) && (cursor_y == Y[9:4])) && (Y[3:0] >= 14);
+wire [15:0] cursor_g = 320*Y[9:1] + XG[10:1];
 
 // Рендеринг шрифта
 wire        cubit = font_data[ 3'h7 ^ X[2:0] ];
@@ -57,6 +64,7 @@ reg  [ 7:0] text_char;
 reg  [ 7:0] text_attr;
 reg  [11:0] cl_fore_;  reg  [11:0] cl_fore;
 reg  [11:0] cl_back_;  reg  [11:0] cl_back;
+reg  [ 7:0] color_320;
 reg  [ 7:0] font_data;
 
 always @(posedge CLOCK) begin
@@ -102,11 +110,29 @@ always @(posedge CLOCK) begin
 
     endcase
 
+    // Графические режимы
+    case (videomode)
+
+        // 320x200x256
+        2, 3: case (XG[0])
+
+            0: begin grph_address <= {videomode[0], cursor_g}; end
+            1: begin color_320    <= grph_data; end
+
+        endcase
+
+    endcase
+
     // Вывод окна видеоадаптера
     if (x >= hz_back && x < hz_visible + hz_back &&
         y >= vt_back && y < vt_visible + vt_back)
     begin
-         {VGA_R, VGA_G, VGA_B} <= color;
+
+        case (videomode)
+        2, 3:    {VGA_R, VGA_G, VGA_B} <= {color_320[7:5],1'b0, color_320[4:2],1'b0, color_320[1:0],2'b00 }; // 3:3:2
+        default: {VGA_R, VGA_G, VGA_B} <= color;
+        endcase
+
     end
     else {VGA_R, VGA_G, VGA_B} <= 12'b0;
 

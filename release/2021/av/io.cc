@@ -101,6 +101,13 @@ void APP::put(int addr, unsigned char value) {
         case 0x33: sdram_addr = (sdram_addr & 0x00FFFFFF) | (value << 24); break;
         case 0x34: sdram_data_byte = value; break;
 
+        // VIDEOMODE
+        case 0x38:
+
+            videomode = value;
+            update_screen();
+            break;
+
         // SPI
         case 0x39: spi_write_data(value); break;
         case 0x3A: spi_write_cmd(value); break;
