@@ -70,7 +70,9 @@ const float sqrt2 = 0.7071; // 1/sqrt(2)
 
 int main() {
 
-    float px = 1.5, py = 1.2, a = 0.0;
+    float px = 1.5,
+          py = 1.2,
+          a = 0.0;
 
     byte bounce;
     int  tex_id;

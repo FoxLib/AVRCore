@@ -87,7 +87,7 @@ APP::~APP() { free(sdram_data); }
 // Загрузка конфигурации
 void APP::config() {
 
-    clock_mhz     = 25;
+    clock_mhz     = 50;
     clock_video   = 50;
     config_width  = 1280;
     config_height = 800;
@@ -827,34 +827,34 @@ int APP::step() {
         case BREAK: cpu_halt = 1; break;
 
         // Управляющие
-        case RJMP:  pc = get_rjmp(); cycles = 2; break;
-        case RCALL: push16(pc >> 1); pc = get_rjmp(); cycles = 3; break;
-        case RET:   pc = pop16() << 1; break;
-        case RETI:  pc = pop16() << 1; flag.i = 1; flag_to_byte(); break;
+        case RJMP:  pc = get_rjmp(); break;
+        case RCALL: push16(pc >> 1); pc = get_rjmp(); cycles = 2; break;
+        case RET:   pc = pop16() << 1; cycles = 3; break;
+        case RETI:  pc = pop16() << 1; flag.i = 1; flag_to_byte(); cycles = 3; break;
         case BCLR:  sram[0x5F] &= ~(1 << get_s3()); byte_to_flag(sram[0x5F]); break;
         case BSET:  sram[0x5F] |=  (1 << get_s3()); byte_to_flag(sram[0x5F]); break;
 
         // Условные перехдоды
-        case BRBS: if ( (sram[0x5F] & (1<<(opcode & 7)))) { pc = get_branch(); cycles = 2; } break;
-        case BRBC: if (!(sram[0x5F] & (1<<(opcode & 7)))) { pc = get_branch(); cycles = 2; }  break;
+        case BRBS: if ( (sram[0x5F] & (1<<(opcode & 7)))) pc = get_branch(); break;
+        case BRBC: if (!(sram[0x5F] & (1<<(opcode & 7)))) pc = get_branch(); break;
 
         // --------------------------------
-        case CPSE: if (get_rd() == get_rr())              cycles = skip_instr(); break;
-        case SBRC: if (!(get_rd() & (1 << (opcode & 7)))) cycles = skip_instr(); break;
-        case SBRS: if   (get_rd() & (1 << (opcode & 7)))  cycles = skip_instr(); break;
+        case CPSE: if (get_rd() == get_rr())              cycles =   skip_instr(); break;
+        case SBRC: if (!(get_rd() & (1 << (opcode & 7)))) cycles = 1+skip_instr(); break;
+        case SBRS: if   (get_rd() & (1 << (opcode & 7)))  cycles = 1+skip_instr(); break;
         case SBIS:
         case SBIC: // Пропуск, если в порту Ap есть бит (или нет бита)
 
             b = (opcode & 7);
             A = (opcode & 0xF8) >> 3;
             v = get(0x20 + A) & (1 << b);
-            if ((command == SBIS && v) || (command == SBIC && !v)) cycles = skip_instr();
+            if ((command == SBIS && v) || (command == SBIC && !v)) cycles = 1+skip_instr();
             break;
         // --------------------------------
 
         // Ввод-вывод
-        case IN:  put_rd(get(0x20 + get_ap())); break;
-        case OUT: put(0x20 + get_ap(), get_rd()); break;
+        case IN:  put_rd(get(0x20 + get_ap())); cycles = 2; break;
+        case OUT: put(0x20 + get_ap(), get_rd()); cycles = 2; break;
 
         // Сброс/установка бита в I/O
         case CBI:
@@ -871,7 +871,7 @@ int APP::step() {
             break;
 
         // Стек
-        case PUSH: push8(get_rd()); cycles = 2; break;
+        case PUSH: push8(get_rd()); cycles = 1; break;
         case POP:  put_rd(pop8()); cycles = 2; break;
 
         // Срециальные
@@ -1024,7 +1024,7 @@ int APP::step() {
             r = a + get_ka();
             set_adiw_flag(a, r);
             put16(d, r);
-            cycles = 2;
+            cycles = 1;
             break;
 
         // Вычитание 16-битного числа
@@ -1035,7 +1035,7 @@ int APP::step() {
             r = a - get_ka();
             set_sbiw_flag(a, r);
             put16(d, r);
-            cycles = 2;
+            cycles = 1;
             break;
 
         // Логический сдвиг вправо
@@ -1166,14 +1166,14 @@ int APP::step() {
         case JMP:
 
             pc = 2 * ((get_jmp() << 16) | fetch());
-            cycles = 3;
+            cycles = 2;
             break;
 
         case CALL:
 
             push16((pc + 2) >> 1);
             pc = 2 * ((get_jmp() << 16) | fetch());
-            cycles = 4;
+            cycles = 2;
             break;
 
         default:
