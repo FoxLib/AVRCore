@@ -84,6 +84,28 @@ APP::APP() {
 // Деструктор
 APP::~APP() { free(sdram_data); }
 
+// Загрузка конфигурации
+void APP::config() {
+
+    clock_mhz     = 25;
+    clock_video   = 50;
+    config_width  = 1280;
+    config_height = 800;
+
+    FILE* fp = fopen("config.ini", "r");
+
+    if (fp) {
+
+        fscanf(fp, "%d", & clock_mhz);
+        fscanf(fp, "%d", & clock_video);
+        fscanf(fp, "%d %d", & config_width, & config_height);
+        fclose(fp);
+    }
+
+    // Инструкции за кадр
+    count_per_frame = (clock_mhz * 1000000) / clock_video;
+}
+
 // ---------------------------------------------------------------------
 // Главный обработчик приложения
 // ---------------------------------------------------------------------
@@ -484,28 +506,6 @@ void APP::loadfile(const char* fn) {
         printf("Указанный файл не был найден\n");
         exit(1);
     }
-}
-
-// Загрузка конфигурации
-void APP::config() {
-
-    clock_mhz     = 50;
-    clock_video   = 50;
-    config_width  = 1280;
-    config_height = 800;
-
-    FILE* fp = fopen("config.ini", "r");
-
-    if (fp) {
-
-        fscanf(fp, "%d", & clock_mhz);
-        fscanf(fp, "%d", & clock_video);
-        fscanf(fp, "%d %d", & config_width, & config_height);
-        fclose(fp);
-    }
-
-    // Инструкции за кадр
-    count_per_frame = (clock_mhz * 1000000) / clock_video;
 }
 
 // Положение курсора мыши X

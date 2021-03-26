@@ -110,8 +110,8 @@ void APP::display_update() {
 
             break;
 
-        case 2: for (k = 0; k < 65536; k++) update_byte_scr(0xF000 + 0x20*4096); break;
-        case 3: for (k = 0; k < 65536; k++) update_byte_scr(0xF000 + 0x30*4096); break;
+        case 2: for (k = 0; k < 65536; k++) update_byte_scr(0xF000 + 0x20*4096 + k); break;
+        case 3: for (k = 0; k < 65536; k++) update_byte_scr(0xF000 + 0x30*4096 + k); break;
     }
 }
 

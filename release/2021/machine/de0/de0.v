@@ -80,7 +80,9 @@ wire locked;
 wire clock_25;
 wire clock_50;
 wire clock_100;
-wire clock_cpu = clock_50 & locked;
+
+// Тумблер Turbo (&locked специально так сделаны)
+wire clock_cpu = (SW[0] ? clock_50 & locked : clock_25 & locked);
 
 de0pll unit_pll
 (

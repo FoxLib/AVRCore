@@ -22,4 +22,7 @@ public:
         bank(bankbase + (A>>12));
         vm[A & 0xFFF] = cl;
     }
+
+    // 24->8 бит
+    byte rgb(byte r, byte g, byte b) { return (r&0xE0) | ((g&0xE0)>>3) | (b>>6); }
 };
