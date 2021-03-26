@@ -123,8 +123,10 @@ avrcpu ModuleCPU
 wire [7:0]  bank;
 wire        data_w_sram;
 wire        data_w_text;
+wire        data_w_grph;
 wire [7:0]  data_o_sram;
 wire [7:0]  data_o_text;
+wire [7:0]  data_o_grph;
 
 memctrl UnitMemoryController(
 
@@ -137,8 +139,10 @@ memctrl UnitMemoryController(
     .data_o         (data_o),
     .data_o_sram    (data_o_sram),
     .data_o_text    (data_o_text),
+    .data_o_grph    (data_o_grph),
     .data_w_sram    (data_w_sram),
     .data_w_text    (data_w_text),
+    .data_w_grph    (data_w_grph),
     .cursor_x       (cursor_x),
     .cursor_y       (cursor_y),
     .ps2_data       (ps2_data),
@@ -180,6 +184,17 @@ memtext UnitMemtext
 );
 
 // 128k Видеопамять графического режима
+memvideo UnitMemvideo
+(
+    .clock     (clock),
+    .address_a ({bank[4:0], address[11:0]}),
+    //.address_b (address_b),
+    .q_a       (data_o_grph),
+    //.q_b       (q_b),
+    .data_a    (data_o),
+    .wren_a    (data_w_grph),
+);
+
 // 32k  Дополнительная память
 
 // ---------------------------------------------------------------------
