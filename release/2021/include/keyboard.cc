@@ -23,4 +23,6 @@ public:
 
         return kb & 0x7F;
     }
+
+    byte get() { return inp(KEYB); }
 };
