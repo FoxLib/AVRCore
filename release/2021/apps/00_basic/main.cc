@@ -6,5 +6,6 @@ screen D;
 int main() {
 
     D.init(7);
-    for (;;) { }
+    for (;;) {
+    }
 }

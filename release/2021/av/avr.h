@@ -161,6 +161,7 @@ protected:
     int  membank;
     int  videomode;
     int  port_keyb_hit;
+    int  port_keyb_cnt;
     int  port_keyb_xt;
     int  key_shift;
     int  text_px, text_py;

@@ -1,30 +1,22 @@
 #include <avrio.cc>
 
 class keyboard {
-
 protected:
-
-    byte _phit;
-
 public:
-
-    keyboard() { _phit = inp(STATUS); }
 
     // Прочитать следующую клавишу
     byte getch() {
 
-        byte status;
+        byte kb;
 
         do {
 
-            // Ожидать смены клавиши
-            while (((status = inp(STATUS)) & 15) == _phit);
+            while ((inp(STATUS) & 0x10) == 0);
+            kb = inp(KEYB);
+            outp(STATUS, 0x10);
 
-            _phit  = status;
-            status = inp(KEYB);
+        } while (kb & 0x80 || kb < 0x04);
 
-        } while (status & 0x80 || status < 0x04);
-
-        return status & 0x7F;
+        return kb & 0x7F;
     }
 };

@@ -24,8 +24,8 @@ unsigned char APP::get(int addr) {
         case 0x21: return port_keyb_xt;
 
         // Статус устройств
-        // 0-3: keyboard hit; 5: spi busy; 6: dram busy; 7: sdram we=1
-        case 0x22: return (port_keyb_hit & 15) | (sdram_ctl & 0x80);
+        // 0-3: keyboard cnt; 4: keyb hit; 5: spi busy; 6: dram busy; 7: sdram we=1
+        case 0x22: return (port_keyb_cnt & 15) | port_keyb_hit | (sdram_ctl & 0x80);
 
         // Курсор
         case 0x2C: dv = cursor_x; break;
@@ -72,8 +72,11 @@ void APP::put(int addr, unsigned char value) {
         case 0x20: membank = value; break;
         case 0x21: intr_timer = value; break;
 
-        // Флаг записи в память SDRAM
+        // Флаг записи в память SDRAM | KBHit
         case 0x22:
+
+            if (value & 0x10)
+                port_keyb_hit = 0;
 
             if (value & 0x80)
                 sdram_data[sdram_addr & 0x3ffffff] = sdram_data_byte;

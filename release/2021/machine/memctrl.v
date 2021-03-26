@@ -32,6 +32,8 @@ reg        keyb_up;
 reg  [7:0] keyb_data;
 wire [7:0] keyb_ascii;
 reg  [3:0] keyb_latch;
+reg        keyb_hit_i;
+reg        keyb_hit_o;
 reg        keyb_shift;
 
 // Маршрутизация памяти
@@ -57,11 +59,11 @@ always @* begin
         /* BANK   */ 16'h20: data_i = bank;
         /* KEYB   */ 16'h21: data_i = keyb_data;
         /* STATUS */ 16'h22: data_i = {
-            /*  7*/ 1'b0, // DRAM-WE
-            /*  6*/ 1'b0, // DRAM busy
-            /*  5*/ 1'b0, // SPI busy
-            /*  4*/ 1'b0,
-            /*3:0*/ keyb_latch,
+            /* 7   RW DRAM-WE  */ 1'b0,
+            /* 6   R  DRAM-BSY */ 1'b0,
+            /* 5   R  SPI-BSY  */ 1'b0,
+            /* 4   RW KBD-HIT  */ keyb_hit_i ^ keyb_hit_o,
+            /* 3:0 R  KBD-CNT  */ keyb_latch
         };
         /* CURSX  */ 16'h2C: data_i = cursor_x;
         /* CURSY  */ 16'h2D: data_i = cursor_y;
@@ -77,11 +79,19 @@ always @(negedge clock) begin
     if (wren)
     case (address)
 
-        16'h20: bank      <= data_o;
-        // 16'h22: // SDRAM WE
-        16'h2C: cursor_x  <= data_o;
-        16'h2D: cursor_y  <= data_o;
-        16'h38: videomode <= data_o;
+        16'h20: bank <= data_o;
+
+        // Запись защелки
+        16'h22: begin
+
+            // При записи в STATUS[4] выполнить сброс KBHIT -> 0
+            if (data_o[4] && keyb_hit_i != keyb_hit_o)
+                keyb_hit_i <= ~keyb_hit_i;
+
+        end
+        16'h2C: cursor_x    <= data_o;
+        16'h2D: cursor_y    <= data_o;
+        16'h38: videomode   <= data_o;
 
     endcase
 
@@ -105,6 +115,10 @@ always @(posedge clock50) begin
             keyb_data  <= {keyb_up, keyb_ascii[6:0]};
             keyb_latch <= keyb_latch + 1;
             keyb_up    <= 1'b0;
+
+            // Установить единицу на STATUS[4]
+            if (keyb_hit_o == keyb_hit_i)
+                keyb_hit_o <= ~keyb_hit_o;
 
         end
 
