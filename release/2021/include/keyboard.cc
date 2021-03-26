@@ -11,9 +11,13 @@ public:
 
         do {
 
+            // Отследить появление kbhit
             while ((inp(STATUS) & 0x10) == 0);
+
             kb = inp(KEYB);
-            outp(STATUS, 0x10);
+
+            // Отослать сигнал для сброса kbhit
+            outp(STATUS, inp(STATUS) | 0x10);
 
         } while (kb & 0x80 || kb < 0x04);
 
