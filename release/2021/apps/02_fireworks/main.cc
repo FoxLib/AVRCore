@@ -58,6 +58,7 @@ int main() {
 
             if (nfree > 160) {
 
+                float k  = 0;
                 int rx = rand() % 320,
                     ry = rand() % 200;
 
@@ -65,12 +66,13 @@ int main() {
 
                     if (fp[i].lt == 0) {
 
-                        float v = (float)(rand() % 255) / 512 + 0.5;
+                        float v = (float)(rand() % 255) / 512.0 + 0.5;
                         fp[i].x = rx;
                         fp[i].y = ry;
-                        fp[i].sx = sin((float)i) * v;
-                        fp[i].sy = cos((float)i) * v;
-                        fp[i].lt = rand()%64 + 192;
+                        fp[i].sx = sin(k) * v;
+                        fp[i].sy = cos(k) * v;
+                        fp[i].lt = 255 - (rand()%16);
+                        k += v;
                     }
                 }
             }
