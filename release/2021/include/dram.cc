@@ -6,13 +6,23 @@ public:
         while (inp(STATUS) & DRAM_BSY);
     }
 
-    // Запись байта в память
-    void poke(dword address, byte v) {
+    void address(dword address) {
 
-        outp(DRAM0A, address);
-        outp(DRAM1A, address >> 8);
-        outp(DRAM2A, address >> 16);
         outp(DRAM3A, address >> 24);
+        outp(DRAM2A, address >> 16);
+        outp(DRAM1A, address >> 8);
+        outp(DRAM0A, address);
+    }
+
+    // Запись байта в память
+    void poke(dword _address, byte v) {
+        address(_address);
+        poke(v);
+    }
+
+    // Адрес уже установлен
+    void poke(byte v) {
+
         outp(DRAMD,  v);
         outp(STATUS, inp(STATUS) | DRAM_WE);
         while (inp(STATUS) & DRAM_BSY);
@@ -20,12 +30,13 @@ public:
     }
 
     // Чтение одного байта из памяти
-    byte peek(dword address) {
+    byte peek(dword _address) {
 
-        outp(DRAM0A, address);
-        outp(DRAM1A, address >> 8);
-        outp(DRAM2A, address >> 16);
-        outp(DRAM3A, address >> 24);
+        address(_address);
+        return peek();
+    }
+
+    byte peek() {
         while (inp(STATUS) & DRAM_BSY);
         return inp(DRAMD);
     }

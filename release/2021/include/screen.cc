@@ -33,7 +33,7 @@ public:
     void cls(byte attr) { cls(attr, 0x20); }
     void cls(byte attr, byte ch) {
 
-        heap(vm, 0xF000);
+        heapvm;
         for (int i = 0; i < 4000; i += 2) {
             vm[i]   = ch;
             vm[i+1] = attr;
@@ -53,6 +53,8 @@ public:
         cursor_y = y;
     }
 
+    void color(byte attr) { cursor_cl = attr; }
+
     // Скрыть или показать курсор
     void hide() { outp(CURSOR_Y, 25); }
     void show() { outp(CURSOR_Y, cursor_y); }
@@ -60,7 +62,7 @@ public:
     // Обновить палитру
     void palette(byte id, byte r, byte g, byte b) {
 
-        heap(vm, 0xFFA0);
+        heapvm;
 
         vm[2*id + 1] = (r >> 4);
         vm[2*id + 0] = (g & 0xF0) | (b >> 4);
@@ -73,7 +75,7 @@ public:
     // Печать символа на экране
     void print_char(byte x, byte y, char ch) {
 
-        heap(vm, 0xF000);
+        heapvm;
         int   z = (x<<1) + (y<<7) + (y<<5);
 
         vm[z]   = ch;
@@ -84,7 +86,7 @@ public:
     void print_char(byte s) {
 
         int i;
-        heap(vm, 0xF000);
+        heapvm;
 
         if (s == 10) {
             cursor_x = 80;
