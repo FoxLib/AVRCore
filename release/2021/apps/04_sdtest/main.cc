@@ -9,7 +9,8 @@ int main() {
 
     D.init(7);
 
-    D.print( S.init() );
+    D.print( S.init() ); D.print(" ");
+    D.print( S.get_sd_type() );
 
     for (;;) { }
 }

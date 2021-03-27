@@ -129,7 +129,7 @@ always @(posedge clock50) begin
             7: begin
 
                 spi_cycle <= 0;
-                sd_din   <= {sd_din[6:0], SPI_MISO};
+                sd_din    <= {sd_din[6:0], SPI_MISO};
 
                 if (spi_counter == 8) begin
 

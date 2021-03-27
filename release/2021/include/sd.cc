@@ -53,6 +53,7 @@ class SD {
 protected:
 
     byte error_id;
+    byte SD_type;
 
     // Процедура отсылки команды на SD-контроллер
     void _command(byte data) {
@@ -126,12 +127,25 @@ protected:
         return status;
     }
 
+    // Расширенная команда
+    byte acmd(byte cmd, dword arg) {
+
+        command(SD_CMD55, 0);
+        return command(cmd, arg);
+    }
+
+
 public:
 
     SD() { outp(SD_CMD, 0); }
 
+    byte get_sd_type() { return SD_type; }
+
     // Инициализация устройства
     byte init() {
+
+        byte  status, i;
+        dword arg;
 
         // Отослать команду `INIT`
         _command(SPI_CMD_INIT);
@@ -140,6 +154,55 @@ public:
         if (command(SD_CMD0, 0) != R1_IDLE_STATE) {
             return set_error(SD_UnknownError);
         }
+
+        // Определить тип карты (SD1)
+        if (command(SD_CMD8, 0x1AA) & R1_ILLEGAL_COMMAND) {
+
+            // Есть illegal-бит, это карта SD1
+            SD_type = SD_CARD_TYPE_SD1;
+
+        } else {
+
+            // Прочесть 4 байта, последний будет важный
+            for (i = 0; i < 4; i++) status = get();
+
+            // Неизвестный тип карты!
+            if (status != 0xAA) return set_error(SD_UnknownCard);
+
+            // Это тип карты SD2
+            SD_type = SD_CARD_TYPE_SD2;
+        }
+
+        // Инициализация карты и отправка кода поддержки SDHC если SD2
+        i   = 0;
+        arg = (SD_type == SD_CARD_TYPE_SD2 ? 0x40000000 : 0);
+
+        // Отсылка ACMD = 0x29. Отсылать и ждать, пока не придет корректный ответ
+        while ((status = acmd(0x29, arg)) != R1_READY_STATE) {
+
+            // Если таймаут вышел
+            if (i++ > 4095) return set_error(SD_AcmdError);
+        }
+
+        // Если SD2, читать OCR регистр для проверки SDHC карты
+        if (SD_type == SD_CARD_TYPE_SD2) {
+
+            // Проверка наличия байта в ответе CMD58 (должно быть 0)
+            if (command(SD_CMD58, 0)) {
+                return set_error(SD_Unknown58CMD);
+            }
+
+            // Прочесть ответ от карты и определить тип (SDHC если есть)
+            if ((get() & 0xC0) == 0xC0) {
+                SD_type = SD_CARD_TYPE_SDHC;
+            }
+
+            // Удалить остатки от OCR
+            for (i = 0; i < 3; i++) get();
+        }
+
+        // Выключить чип
+        _command(SPI_CMD_CE1);
 
         return SD_OK;
     }
