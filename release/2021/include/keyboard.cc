@@ -12,12 +12,12 @@ public:
         do {
 
             // Отследить появление kbhit
-            while ((inp(STATUS) & 0x10) == 0);
+            while ((inp(STATUS) & 1) == 0);
 
             kb = inp(KEYB);
 
             // Отослать сигнал для сброса kbhit
-            outp(STATUS, inp(STATUS) | 0x10);
+            outp(STATUS, inp(STATUS) | 1);
 
         } while (kb & 0x80 || kb < 0x04);
 

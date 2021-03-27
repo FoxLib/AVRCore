@@ -24,8 +24,8 @@ unsigned char APP::get(int addr) {
         case 0x21: return port_keyb_xt;
 
         // Статус устройств
-        // 0-3: keyboard cnt; 4: keyb hit; 5: spi busy; 6: dram busy; 7: sdram we=1
-        case 0x22: return (port_keyb_cnt & 15) | port_keyb_hit | (sdram_ctl & 0x80);
+        // 0: keyboard hit; 5: spi busy; 6: dram busy; 7: sdram we=1
+        case 0x22: return port_keyb_hit | (sdram_ctl & 0x80);
 
         // Курсор
         case 0x2C: dv = cursor_x; break;
@@ -75,7 +75,7 @@ void APP::put(int addr, unsigned char value) {
         // Флаг записи в память SDRAM | KBHit
         case 0x22:
 
-            if (value & 0x10)
+            if (value & 0x01)
                 port_keyb_hit = 0;
 
             if (value & 0x80)
@@ -148,11 +148,11 @@ void APP::spi_write_cmd(unsigned char data) {
     int old_data = data;
 
     // Срабатывает только на позитивном фронте
-    if (!(spi_prev_cmd & 0x80) && (data & 0x80)) {
+    if (!(spi_st & 0x80) && (data & 0x80)) {
 
         data &= 3;
 
-        if (data == 0) { spi_st &= ~2; /* reset chip, init */ }
+        if (data == 0) { /* reset chip, init */ }
         else if (data == 2) { /* enable chip */ }
         else if (data == 3) { /* disable chip */ }
         // data = 1
@@ -347,8 +347,7 @@ void APP::spi_write_cmd(unsigned char data) {
                 }
             }
         }
-
     }
 
-    spi_prev_cmd = old_data;
+    spi_st = (old_data & 0x83);
 }

@@ -87,9 +87,7 @@ wire locked;
 wire clock_25;
 wire clock_50;
 wire clock_100;
-
-// Тумблер Turbo (&locked специально так сделаны)
-wire clock_cpu = (SW[0] ? clock_50 & locked : clock_25 & locked);
+wire clock_cpu = clock_25 & locked;
 
 de0pll unit_pll
 (
@@ -166,6 +164,12 @@ memctrl UnitMemoryController(
     .sdram_o_data   (sdram_o_data),
     .sdram_we       (sdram_we),
     .sdram_ready    (sdram_ready),
+    .sd_cmd         (sd_cmd),
+    .sd_din         (sd_din),
+    .sd_out         (sd_out),
+    .sd_signal      (sd_signal),
+    .sd_busy        (sd_busy),
+    .sd_timeout     (sd_timeout),
 );
 
 // ---------------------------------------------------------------------
@@ -177,7 +181,7 @@ memflash UnitMemFlash
 (
     .clock     (clock),
     .address_a (pc[14:0]),
-    .q_a       (ir),
+    .q_a       (ir)
 );
 
 // BYTE 64k Общая оперативная память
@@ -187,7 +191,7 @@ memsram UnitMemSram
     .address_a (address),
     .q_a       (data_o_sram),
     .data_a    (data_o),
-    .wren_a    (data_w_sram),
+    .wren_a    (data_w_sram)
 );
 
 // BYTE 8k Видеопамять текстового режима
@@ -199,7 +203,7 @@ memtext UnitMemtext
     .q_a       (data_o_text),
     .q_b       (text_data),
     .data_a    (data_o),
-    .wren_a    (data_w_text),
+    .wren_a    (data_w_text)
 );
 
 // BYTE 128k Видеопамять графического режима
@@ -211,7 +215,7 @@ memvideo UnitMemvideo
     .q_a       (data_o_grph),
     .q_b       (grph_data),
     .data_a    (data_o),
-    .wren_a    (data_w_grph),
+    .wren_a    (data_w_grph)
 );
 
 // 32k  Дополнительная память
@@ -247,7 +251,7 @@ vga unit_vga
 
     // Курсор
     .cursor_x (cursor_x),
-    .cursor_y (cursor_y),
+    .cursor_y (cursor_y)
 );
 
 // ---------------------------------------------------------------------
@@ -260,11 +264,11 @@ wire       ps2_hit;
 // Контроллер клавиатуры
 ps2keyboard keyb
 (
-    .CLOCK_50           (CLOCK_50),  // Тактовый генератор на 50 Мгц
+    .CLOCK_50           (clock_50),  // Тактовый генератор на 50 Мгц
     .PS2_CLK            (PS2_CLK),   // Таймингс PS/2
     .PS2_DAT            (PS2_DAT),   // Данные с PS/2
     .received_data      (ps2_data),  // Принятые данные
-    .received_data_en   (ps2_hit),   // Нажата клавиша
+    .received_data_en   (ps2_hit)    // Нажата клавиша
 );
 
 // ---------------------------------------------------------------------
@@ -302,6 +306,36 @@ sdram UnitSDRAM
     .dram_udqm      (DRAM_UDQM)       // Маска для старшего байта
 );
 
+// Контроллер SPI
+// ---------------------------------------------------------------------
+
+wire [1:0]  sd_cmd;
+wire [7:0]  sd_din;
+wire [7:0]  sd_out;
+wire        sd_signal;
+wire        sd_busy;
+wire        sd_timeout;
+
+sd UnitSD(
+
+    // 50 Mhz
+    .clock50    (clock_50),
+
+    // Физический интерфейс
+    .SPI_CS     (SD_DATA[3]),   // Выбор чипа
+    .SPI_SCLK   (SD_CLK),       // Тактовая частота
+    .SPI_MISO   (SD_DATA[0]),   // Входящие данные
+    .SPI_MOSI   (SD_CMD),       // Исходящие
+
+    // Интерфейс
+    .sd_signal  (sd_signal),   // =1 Сообщение отослано на spi
+    .sd_busy    (sd_busy),     // =1 Занято
+    .sd_timeout (sd_timeout),  // =1 Таймаут
+    .sd_cmd     (sd_cmd),      // Команда
+    .sd_din     (sd_din),      // Принятое сообщение от карты
+    .sd_out     (sd_out)       // Сообщение на отправку к карте
+);
+
 endmodule
 
 `include "../avrcpu.v"
@@ -309,3 +343,4 @@ endmodule
 `include "../memctrl.v"
 `include "../sdram.v"
 `include "../keyboard.v"
+`include "../sd.v"

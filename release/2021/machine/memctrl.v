@@ -32,13 +32,20 @@ module memctrl(
     output reg [ 7:0]   sdram_i_data,
     input wire [ 7:0]   sdram_o_data,
     output reg          sdram_we,
-    input wire          sdram_ready
+    input wire          sdram_ready,
+
+    // SD SPI
+    output reg  [1:0]   sd_cmd,
+    input  wire [7:0]   sd_din,
+    output reg  [7:0]   sd_out,
+    output reg          sd_signal,
+    input  wire         sd_busy,
+    input  wire         sd_timeout
 );
 
 reg        keyb_up;
 reg  [7:0] keyb_data;
 wire [7:0] keyb_ascii;
-reg  [3:0] keyb_latch;
 reg        keyb_hit_i;
 reg        keyb_hit_o;
 reg        keyb_shift;
@@ -66,11 +73,14 @@ always @* begin
         /* BANK   */ 16'h20: data_i = bank;
         /* KEYB   */ 16'h21: data_i = keyb_data;
         /* STATUS */ 16'h22: data_i = {
-            /* 7   RW DRAM-WE  */ sdram_we,
-            /* 6   R  DRAM-BSY */ ~sdram_ready,
-            /* 5   R  SPI-BSY  */ 1'b0,
-            /* 4   RW KBD-HIT  */ keyb_hit_i ^ keyb_hit_o,
-            /* 3:0 R  KBD-CNT  */ keyb_latch
+            /* 7 RW DRAM-WE  */ sdram_we,
+            /* 6 R  DRAM-BSY */ ~sdram_ready,
+            /* 5 R  SD-BSY   */ sd_busy,
+            /* 4 R  SD-TIME  */ sd_timeout,
+            /* 3 -           */ 1'b0,
+            /* 2 -           */ 1'b0,
+            /* 1 -           */ 1'b0,
+            /* 0 R  KBD-CNT  */ keyb_hit_i ^ keyb_hit_o
         };
         /* CURSX  */ 16'h2C: data_i = cursor_x;
         /* CURSY  */ 16'h2D: data_i = cursor_y;
@@ -80,6 +90,8 @@ always @* begin
         /* SDRAM3 */ 16'h33: data_i = sdram_address[31:24];
         /* SDRAMD */ 16'h34: data_i = sdram_o_data;
         /* VIDEO  */ 16'h38: data_i = videomode;
+        /* SD-DAT */ 16'h39: data_i = sd_din;
+        /* SD-CMD */ 16'h3A: data_i = {sd_signal, 5'b00000, sd_cmd[1:0]};
 
     endcase
 
@@ -97,7 +109,7 @@ always @(negedge clock) begin
         16'h22: begin
 
             // При записи в STATUS[4] выполнить сброс KBHIT -> 0
-            if (data_o[4] && keyb_hit_i != keyb_hit_o)
+            if (data_o[0] && keyb_hit_i != keyb_hit_o)
                 keyb_hit_i <= ~keyb_hit_i;
 
             // Запись в DRAM
@@ -112,6 +124,10 @@ always @(negedge clock) begin
         16'h33: sdram_address[31:24] <= data_o;
         16'h34: sdram_i_data <= data_o;
         16'h38: videomode    <= data_o;
+        16'h39: sd_out       <= data_o;
+
+        // Защелка + команда на SPI
+        16'h3A: {sd_signal, sd_cmd} <= {data_o[7], data_o[1:0]};
 
     endcase
 
@@ -133,7 +149,6 @@ always @(posedge clock50) begin
                 keyb_shift <= ~keyb_up;
 
             keyb_data  <= {keyb_up, keyb_ascii[6:0]};
-            keyb_latch <= keyb_latch + 1;
             keyb_up    <= 1'b0;
 
             // Установить единицу на STATUS[4]

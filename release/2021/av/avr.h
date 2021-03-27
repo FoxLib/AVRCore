@@ -161,7 +161,6 @@ protected:
     int  membank;
     int  videomode;
     int  port_keyb_hit;
-    int  port_keyb_cnt;
     int  port_keyb_xt;
     int  key_shift;
     int  text_px, text_py;
@@ -176,7 +175,6 @@ protected:
     unsigned char spi_st;
     unsigned char spi_status;
     unsigned char spi_command;
-    unsigned char spi_prev_cmd;
     unsigned long spi_arg;
     unsigned long spi_lba;
     unsigned char spi_crc;
