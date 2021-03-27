@@ -62,6 +62,13 @@ module de0(
     output             VGA_VS
 );
 
+// MISO: Input Port
+assign SD_DATA[0] = 1'bZ;
+
+// SDRAM Enable
+assign DRAM_CKE  = 1; // ChipEnable
+assign DRAM_CS_N = 0; // ChipSelect
+
 // Z-state
 assign DRAM_DQ = 16'hzzzz;
 assign GPIO_0  = 36'hzzzzzzzz;
