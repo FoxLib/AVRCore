@@ -12,9 +12,10 @@
 
 enum EnumStatuses {
 
+    SD_TIMEOUT      = 0x10,
+    SD_BUSY         = 0x20,
     DRAM_WE         = 0x80,
     DRAM_BSY        = 0x40,
-
 };
 
 // Описания всех портов
@@ -33,6 +34,8 @@ enum EnumPORTSID {
     DRAM3A          = 0x13, // RW
     DRAMD           = 0x14, // RW
     VIDEOMODE       = 0x18, // RW
+    SD_DATA         = 0x19,
+    SD_CMD          = 0x1A,
 };
 
 // Список видеорежимов
@@ -41,14 +44,6 @@ enum EnumVIDEOMODES {
     VIDEOMODE_80x25       = 0,
     VIDEOMODE_320x200x8_0 = 2,
     VIDEOMODE_320x200x8_1 = 3,
-};
-
-enum EnumSPICommands {
-
-    SPI_CMD_INIT    = 0,
-    SPI_CMD_SEND    = 1,
-    SPI_CMD_CE0     = 2,
-    SPI_CMD_CE1     = 3
 };
 
 enum KEY_ASCII {

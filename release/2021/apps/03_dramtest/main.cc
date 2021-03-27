@@ -5,7 +5,7 @@
 screen D;
 dram   M;
 
-#define MAX 64*1024
+#define MAX 8*1024
 
 int main() {
 
