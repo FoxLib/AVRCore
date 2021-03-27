@@ -26,6 +26,7 @@ int main() {
     random_id = inp(TIMERL);
 
     G.screen(0);
+
     for (;;) {
 
         int nfree = 0;

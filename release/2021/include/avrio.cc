@@ -10,6 +10,13 @@
 #define word        unsigned int
 #define dword       unsigned long
 
+enum EnumStatuses {
+
+    DRAM_WE         = 0x80,
+    DRAM_BSY        = 0x40,
+
+};
+
 // Описания всех портов
 enum EnumPORTSID {
 
@@ -20,6 +27,11 @@ enum EnumPORTSID {
     CURSOR_Y        = 0x0D, // RW
     TIMERL          = 0x0E, // R
     TIMERH          = 0x0F, // R
+    DRAM0A          = 0x10, // RW
+    DRAM1A          = 0x11, // RW
+    DRAM2A          = 0x12, // RW
+    DRAM3A          = 0x13, // RW
+    DRAMD           = 0x14, // RW
     VIDEOMODE       = 0x18, // RW
 };
 
@@ -81,5 +93,6 @@ inline void outp(int port, unsigned char val) { ((volatile unsigned char*)0x20)[
 // Объявление указателя на память (имя x, адрес a)
 #define heap(x, a)  byte* x = (byte*) a
 #define bank(x)     outp(BANK, x)
+#define heapvm      byte* vm = (byte*) 0xf000
 
 #endif

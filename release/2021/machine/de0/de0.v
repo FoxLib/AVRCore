@@ -154,6 +154,11 @@ memctrl UnitMemoryController(
     .ps2_data       (ps2_data),
     .ps2_hit        (ps2_hit),
     .videomode      (videomode),
+    .sdram_address  (sdram_address),
+    .sdram_i_data   (sdram_i_data),
+    .sdram_o_data   (sdram_o_data),
+    .sdram_we       (sdram_we),
+    .sdram_ready    (sdram_ready),
 );
 
 // ---------------------------------------------------------------------
@@ -217,13 +222,14 @@ wire [ 7:0] grph_data;
 
 vga unit_vga
 (
-    .CLOCK  (clock_25),
-    .VGA_R  (VGA_R),
-    .VGA_G  (VGA_G),
-    .VGA_B  (VGA_B),
-    .VGA_HS (VGA_HS),
-    .VGA_VS (VGA_VS),
+    .CLOCK      (clock_25),
+    .VGA_R      (VGA_R),
+    .VGA_G      (VGA_G),
+    .VGA_B      (VGA_B),
+    .VGA_HS     (VGA_HS),
+    .VGA_VS     (VGA_VS),
 
+    // Видеорежим
     .videomode    (videomode),
 
     // Доступ к памяти
@@ -254,10 +260,45 @@ ps2keyboard keyb
     .received_data_en   (ps2_hit),   // Нажата клавиша
 );
 
+// ---------------------------------------------------------------------
+// SDRAM
+// ---------------------------------------------------------------------
+
+wire [31:0] sdram_address;
+wire [ 7:0] sdram_i_data;
+wire [ 7:0] sdram_o_data;
+wire        sdram_we;
+wire        sdram_ready;
+
+sdram UnitSDRAM
+(
+    // Тактовая частота 100 МГц (SDRAM)
+    .clock_100_mhz  (clock),
+    .clock_25_mhz   (clock_25),
+
+    // Управление
+    .i_address      (sdram_address[25:0]),  // 64 МБ памяти
+    .i_we           (sdram_we),             // Признак записи в память
+    .i_data         (sdram_i_data),         // Данные для записи (8 бит)
+    .o_data         (sdram_o_data),         // Прочитанные данные
+    .o_ready        (sdram_ready),          // Готовность данных (=1 Готово)
+
+    // Физический интерфейс DRAM
+    .dram_clk       (DRAM_CLK),       // Тактовая частота памяти
+    .dram_ba        (DRAM_BA),        // 4 банка
+    .dram_addr      (DRAM_ADDR),      // Максимальный адрес 2^13=8192
+    .dram_dq        (DRAM_DQ),        // Ввод-вывод
+    .dram_cas       (DRAM_CAS_N),     // CAS
+    .dram_ras       (DRAM_RAS_N),     // RAS
+    .dram_we        (DRAM_WE_N),      // WE
+    .dram_ldqm      (DRAM_LDQM),      // Маска для младшего байта
+    .dram_udqm      (DRAM_UDQM)       // Маска для старшего байта
+);
 
 endmodule
 
 `include "../avrcpu.v"
 `include "../vga.v"
 `include "../memctrl.v"
+`include "../sdram.v"
 `include "../keyboard.v"

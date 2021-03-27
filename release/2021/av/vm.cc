@@ -87,7 +87,7 @@ APP::~APP() { free(sdram_data); }
 // Загрузка конфигурации
 void APP::config() {
 
-    clock_mhz     = 50;
+    clock_mhz     = 25;
     clock_video   = 50;
     config_width  = 1280;
     config_height = 800;

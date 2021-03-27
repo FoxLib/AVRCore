@@ -17,6 +17,18 @@ public:
         outp(VIDEOMODE, 2 + _mode);
     }
 
+    // Очистить экран
+    void cls(byte c) {
+
+        heapvm;
+        for (int a = 0; a < 16; a++) {
+            bank(bankbase + a);
+            for (int b = 0; b < 4096; b++) {
+                vm[b] = c;
+            }
+        }
+    }
+
     // Установка точки на экране (320x200)
     void pset(word x, word y, byte cl) {
 

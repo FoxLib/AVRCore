@@ -25,7 +25,14 @@ module memctrl(
     input wire          ps2_hit,
 
     // Видеорежим
-    output reg  [7:0]   videomode
+    output reg  [7:0]   videomode,
+
+    // SDRAM
+    output reg [31:0]   sdram_address,
+    output reg [ 7:0]   sdram_i_data,
+    input wire [ 7:0]   sdram_o_data,
+    output reg          sdram_we,
+    input wire          sdram_ready
 );
 
 reg        keyb_up;
@@ -59,14 +66,19 @@ always @* begin
         /* BANK   */ 16'h20: data_i = bank;
         /* KEYB   */ 16'h21: data_i = keyb_data;
         /* STATUS */ 16'h22: data_i = {
-            /* 7   RW DRAM-WE  */ 1'b0,
-            /* 6   R  DRAM-BSY */ 1'b0,
+            /* 7   RW DRAM-WE  */ sdram_we,
+            /* 6   R  DRAM-BSY */ ~sdram_ready,
             /* 5   R  SPI-BSY  */ 1'b0,
             /* 4   RW KBD-HIT  */ keyb_hit_i ^ keyb_hit_o,
             /* 3:0 R  KBD-CNT  */ keyb_latch
         };
         /* CURSX  */ 16'h2C: data_i = cursor_x;
         /* CURSY  */ 16'h2D: data_i = cursor_y;
+        /* SDRAM0 */ 16'h30: data_i = sdram_address[ 7: 0];
+        /* SDRAM1 */ 16'h31: data_i = sdram_address[15: 8];
+        /* SDRAM2 */ 16'h32: data_i = sdram_address[23:16];
+        /* SDRAM3 */ 16'h33: data_i = sdram_address[31:24];
+        /* SDRAMD */ 16'h34: data_i = sdram_o_data;
         /* VIDEO  */ 16'h38: data_i = videomode;
 
     endcase
@@ -88,10 +100,18 @@ always @(negedge clock) begin
             if (data_o[4] && keyb_hit_i != keyb_hit_o)
                 keyb_hit_i <= ~keyb_hit_i;
 
+            // Запись в DRAM
+            sdram_we <= data_o[7];
+
         end
-        16'h2C: cursor_x    <= data_o;
-        16'h2D: cursor_y    <= data_o;
-        16'h38: videomode   <= data_o;
+        16'h2C: cursor_x <= data_o;
+        16'h2D: cursor_y <= data_o;
+        16'h30: sdram_address[ 7: 0] <= data_o;
+        16'h31: sdram_address[15: 8] <= data_o;
+        16'h32: sdram_address[23:16] <= data_o;
+        16'h33: sdram_address[31:24] <= data_o;
+        16'h34: sdram_i_data <= data_o;
+        16'h38: videomode    <= data_o;
 
     endcase
 
