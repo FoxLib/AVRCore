@@ -134,9 +134,11 @@ wire [7:0]  bank;
 wire        data_w_sram;
 wire        data_w_text;
 wire        data_w_grph;
+wire        data_w_32kb;
 wire [7:0]  data_o_sram;
 wire [7:0]  data_o_text;
 wire [7:0]  data_o_grph;
+wire [7:0]  data_o_32kb;
 wire [7:0]  videomode;
 
 memctrl UnitMemoryController(
@@ -151,9 +153,11 @@ memctrl UnitMemoryController(
     .data_o_sram    (data_o_sram),
     .data_o_text    (data_o_text),
     .data_o_grph    (data_o_grph),
+    .data_o_32kb    (data_o_32kb),
     .data_w_sram    (data_w_sram),
     .data_w_text    (data_w_text),
     .data_w_grph    (data_w_grph),
+    .data_w_32kb    (data_w_32kb),
     .cursor_x       (cursor_x),
     .cursor_y       (cursor_y),
     .ps2_data       (ps2_data),
@@ -218,7 +222,17 @@ memvideo UnitMemvideo
     .wren_a    (data_w_grph)
 );
 
-// 32k  Дополнительная память
+// BYTE 32k  Дополнительная память
+mem32k UnitMem32k
+(
+    .clock     (clock),
+    .address_a ({bank[2:0], address[11:0]}),
+    // .address_b (vga480_address),
+    .q_a       (data_o_32kb),
+    // .q_b       (vga480_data),
+    .data_a    (data_o),
+    .wren_a    (data_w_32kb)
+);
 
 // ---------------------------------------------------------------------
 // Видеоадаптер

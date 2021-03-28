@@ -12,9 +12,11 @@ module memctrl(
     input  wire [7:0]   data_o_sram,    // Данные из SRAM-памяти
     input  wire [7:0]   data_o_text,    // Данные из TEXT-памяти
     input  wire [7:0]   data_o_grph,    // Данные из GRPH-памяти
+    input  wire [7:0]   data_o_32kb,    // Данные из 32KB-памяти
     output reg          data_w_sram,    // Разрешение записи в память SRAM
     output reg          data_w_text,    // Разрешение записи в память ROM
     output reg          data_w_grph,    // Разрешение записи в память GRPH
+    output reg          data_w_32kb,    // Разрешение записи в память 32KB
 
     // Курсор VGA
     output reg  [7:0]   cursor_x,
@@ -62,8 +64,10 @@ always @* begin
     if (address >= 16'hF000)
     casex (bank)
 
+        8'b00000000: begin /* верхняя страница */ end
         8'b0000001x: begin data_w_text = wren; data_w_sram = 1'b0; data_i = data_o_text; end
         8'b001xxxxx: begin data_w_grph = wren; data_w_sram = 1'b0; data_i = data_o_grph; end
+        8'b01000xxx: begin data_w_32kb = wren; data_w_sram = 1'b0; data_i = data_o_32kb; end
         default:     begin data_w_sram = 1'b0; data_i = 8'hFF; end
 
     endcase
