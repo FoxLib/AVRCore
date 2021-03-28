@@ -30,7 +30,8 @@ enum SD_Errors {
     SD_UnsupportYet     = 7,
     SD_WriteError       = 8,
     SD_WriteError2      = 9,
-    SD_WriteError3      = 10
+    SD_WriteError3      = 10,
+    SD_TimeoutErrorWRT  = 11,
 };
 
 enum EnumSPICommands {
@@ -54,6 +55,7 @@ class SD {
 protected:
 
     byte error_id;
+    byte error_code;
     byte SD_type;
 
     // Процедура отсылки команды на SD-контроллер
@@ -90,7 +92,7 @@ protected:
     // Отсылка команды на SD-карту
     byte command(byte cmd, dword arg) {
 
-        int i;
+        long i;
         byte crc, status = 0xFF, on_error = 1;
 
         error_id = 0;
@@ -99,7 +101,7 @@ protected:
         _command(SPI_CMD_CE0);
 
         // Принять байты, до тех пор, пока не будет 0xFF
-        for (i = 0; i < 4095; i++) {
+        for (i = 0; i < 65536; i++) {
             if (get() == 0xFF) {
                 on_error = 0; break;
             }
@@ -121,7 +123,7 @@ protected:
         put(crc);
 
         // Ожидать снятия флага BUSY
-        for (i = 0; i < 255; i++)
+        for (i = 0; i < 256; i++)
             if (((status = get()) & 0x80) == 0)
                 break;
 
@@ -173,7 +175,7 @@ protected:
 
         // Отсылка ACMD = 0x29. Отсылать и ждать, пока не придет корректный ответ
         while ((status = acmd(0x29, arg)) != R1_READY_STATE) {
-            if (i++ > 4095) return set_error(SD_AcmdError);
+            if (i++ > 8192) return set_error(SD_AcmdError);
         }
 
         // Если SD2, читать OCR регистр для проверки SDHC карты
@@ -200,8 +202,10 @@ public:
 
     SD() { outp(SD_CMD, 0); init(); }
 
+    byte sector[512];
     byte get_sd_type() { return SD_type; }
     byte get_status()  { return error_id; }
+    byte get_error_code() { return error_code; }
 
     // Читать блок 512 байт в память: записывается результат в SD_data
     byte read(dword lba, byte SD_data[]) {
@@ -225,7 +229,7 @@ public:
 
         // Ожидание ответа от SD
         while ((status = get()) == 0xFF)
-            if (i++ > 4095)
+            if (i++ > 8192)
                 return set_error(SD_TimeoutError);
 
         // DATA_START_BLOCK = 0xFE
@@ -247,6 +251,7 @@ public:
         int i = 0;
         byte status;
 
+        error_code = 0;
         set_error(SD_OK);
 
         // В случае истечения таймаута ожидания
@@ -279,14 +284,28 @@ public:
 
         // Ожидание окончания программирования
         while ((status = get()) == 0xFF)
-            if (i++ > 4095)
-                return set_error(SD_TimeoutError);
+            if (++i >= 8192)
+                return set_error(SD_TimeoutErrorWRT);
+
+        // =========================
+        // Тестирование после записи
+        // =========================
 
         // Отсылка CMD13 (SEND_STATUS), должен быть 0
-        if (command(SD_CMD13, 0)) return set_error(SD_WriteError2);
+        if ((status = command(SD_CMD13, 0))) {
+            error_code = status;
+            return set_error(SD_WriteError2);
+        }
         // Если 0, проверить что следующий байт тоже 0
-        else if (get()) return set_error(SD_WriteError3);
+        else if ((status = get())) {
+            error_code = status;
+            return set_error(SD_WriteError3);
+        }
 
         return set_error(SD_OK);
     }
+
+    // Чтение и запись во временную память
+    byte read(dword lba)  { return read (lba, sector); }
+    byte write(dword lba) { return write(lba, sector); }
 };
