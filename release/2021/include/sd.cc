@@ -29,7 +29,8 @@ enum SD_Errors {
     SD_BlockSearchError = 6,
     SD_UnsupportYet     = 7,
     SD_WriteError       = 8,
-    SD_WriteError2      = 9
+    SD_WriteError2      = 9,
+    SD_WriteError3      = 10
 };
 
 enum EnumSPICommands {
@@ -194,7 +195,7 @@ protected:
 
         return set_error(SD_OK);
     }
-    
+
 public:
 
     SD() { outp(SD_CMD, 0); init(); }
@@ -211,7 +212,7 @@ public:
         set_error(SD_OK);
 
         // В случае истечения таймаута ожидания
-        if (inp(STATUS) & SD_TIMEOUT) 
+        if (inp(STATUS) & SD_TIMEOUT)
             init();
 
         // Кроме SDHC ничего не поддерживается
@@ -257,7 +258,7 @@ public:
             return set_error(SD_UnsupportYet);
 
         // Отослать команду поиска блока
-        if (command(SD_CMD24, lba)) 
+        if (command(SD_CMD24, lba))
             return set_error(SD_BlockSearchError);
 
         // DATA_START_BLOCK
@@ -273,17 +274,18 @@ public:
         status = get();
 
         // Сверить результат
-        if ((status & 0x1F) != 0x05) 
-            return set_error(SD_WriteError);       
+        if ((status & 0x1F) != 0x05)
+            return set_error(SD_WriteError);
 
         // Ожидание окончания программирования
         while ((status = get()) == 0xFF)
             if (i++ > 4095)
                 return set_error(SD_TimeoutError);
 
-        // response is r2 so get and check two bytes for nonzero
-        if (command(SD_CMD13, 0) || get())
-            return set_error(SD_WriteError2);
+        // Отсылка CMD13 (SEND_STATUS), должен быть 0
+        if (command(SD_CMD13, 0)) return set_error(SD_WriteError2);
+        // Если 0, проверить что следующий байт тоже 0
+        else if (get()) return set_error(SD_WriteError3);
 
         return set_error(SD_OK);
     }
