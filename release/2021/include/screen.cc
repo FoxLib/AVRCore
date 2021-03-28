@@ -131,11 +131,30 @@ public:
 
         return i;
     }
-
+    
     // Печать числа
     int print(long v) {
 
         o_format.i2a(v);
         return print((const char*) o_format.buffer);
     }
+   
+    int println(const char* s) { byte ln = print(s); print_char(10); return ln; }
+    int println(long v)        { byte ln = print(v); print_char(10); return ln; }
+ 
+	// size=1, 2, 4
+    int print(long v, byte radix, int size) {
+		
+		if (radix == 16) {
+			
+			for (int i = 0; i < 2*size; i++) {
+				byte nibble = (v >> ((8*size-4) - 4*i)) & 15;
+				print_char(nibble + (nibble < 10 ? '0' : '7'));
+			}
+			
+			return 8;
+		}
+		
+		return 0;
+	}
 };

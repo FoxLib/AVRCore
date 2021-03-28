@@ -134,12 +134,6 @@ protected:
         return command(cmd, arg);
     }
 
-public:
-
-    SD() { outp(SD_CMD, 0); }
-
-    byte get_sd_type() { return SD_type; }
-
     // Инициализация устройства
     byte init() {
 
@@ -197,6 +191,99 @@ public:
             // Удалить остатки от OCR
             for (i = 0; i < 3; i++) get();
         }
+
+        return set_error(SD_OK);
+    }
+    
+public:
+
+    SD() { outp(SD_CMD, 0); init(); }
+
+    byte get_sd_type() { return SD_type; }
+    byte get_status()  { return error_id; }
+
+    // Читать блок 512 байт в память: записывается результат в SD_data
+    byte read(dword lba, byte SD_data[]) {
+
+        int i = 0;
+        byte status;
+
+        set_error(SD_OK);
+
+        // В случае истечения таймаута ожидания
+        if (inp(STATUS) & SD_TIMEOUT) 
+            init();
+
+        // Кроме SDHC ничего не поддерживается
+        if (SD_type != SD_CARD_TYPE_SDHC)
+            return set_error(SD_UnsupportYet);
+
+        // Отослать команду поиска блока
+        if (command(SD_CMD17, lba))
+            return set_error(SD_BlockSearchError);
+
+        // Ожидание ответа от SD
+        while ((status = get()) == 0xFF)
+            if (i++ > 4095)
+                return set_error(SD_TimeoutError);
+
+        // DATA_START_BLOCK = 0xFE
+        if (status != 0xFE) {
+            return set_error(SD_BlockSearchError);
+        }
+
+        // Прочесть данные
+        for (i = 0; i < 512; i++) {
+            SD_data[i] = get();
+        }
+
+        return set_error(SD_OK);
+    }
+
+    // Писать блок 512 байт в память
+    byte write(dword lba, byte SD_data[]) {
+
+        int i = 0;
+        byte status;
+
+        set_error(SD_OK);
+
+        // В случае истечения таймаута ожидания
+        if (inp(STATUS) & SD_TIMEOUT)
+            init();
+
+        // Кроме SDHC ничего не поддерживается
+        if (SD_type != SD_CARD_TYPE_SDHC)
+            return set_error(SD_UnsupportYet);
+
+        // Отослать команду поиска блока
+        if (command(SD_CMD24, lba)) 
+            return set_error(SD_BlockSearchError);
+
+        // DATA_START_BLOCK
+        put(0xFE);
+
+        // Запись данных
+        for (int i = 0; i < 512; i++) put(SD_data[i]);
+
+        // Dummy 16-bit CRC
+        put(0xFF);
+        put(0xFF);
+
+        status = get();
+
+        // Сверить результат
+        if ((status & 0x1F) != 0x05) 
+            return set_error(SD_WriteError);       
+
+        // Ожидание окончания программирования
+        while ((status = get()) == 0xFF)
+            if (i++ > 4095)
+                return set_error(SD_TimeoutError);
+
+        // response is r2 so get and check two bytes for nonzero
+        if (command(SD_CMD13, 0) || get())
+            return set_error(SD_WriteError2);
 
         return set_error(SD_OK);
     }
