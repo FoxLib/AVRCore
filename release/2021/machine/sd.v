@@ -118,18 +118,15 @@ always @(posedge clock50) begin
         2: case (spi_cycle)
 
             // CLK-DN
-            0: begin spi_cycle <= 1; SPI_SCLK    <= 0; end
-            1: begin spi_cycle <= 2; SPI_MOSI    <= 0; end
-            2: begin spi_cycle <= 3; SPI_MOSI    <=  spi_data_w[7]; end
-            3: begin spi_cycle <= 4; spi_data_w  <= {spi_data_w[6:0], 1'b0}; end
+            0: begin spi_cycle <= 1; SPI_SCLK <= 0; SPI_MOSI <= 0; end
+            1: begin spi_cycle <= 2; SPI_MOSI <= spi_data_w[7]; end
             // CLK-UP
-            4: begin spi_cycle <= 5; SPI_SCLK    <= 1; end
-            5: begin spi_cycle <= 6; spi_counter <= spi_counter + 1; end
-            6: begin spi_cycle <= 7; end
-            7: begin
+            2: begin spi_cycle <= 3; SPI_SCLK <= 1; spi_counter <= spi_counter + 1; end
+            3: begin
 
-                spi_cycle <= 0;
-                sd_din    <= {sd_din[6:0], SPI_MISO};
+                spi_cycle  <= 0;
+                sd_din     <= {sd_din[6:0], SPI_MISO};
+                spi_data_w <= {spi_data_w[6:0], 1'b0};
 
                 if (spi_counter == 8) begin
 

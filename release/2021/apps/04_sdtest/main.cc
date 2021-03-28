@@ -3,14 +3,14 @@
 #include <sd.cc>
 
 screen D;
-SD     S;
+SD     sd;
 
 int main() {
 
     D.init(7);
 
-    D.print( S.init() ); D.print(" ");
-    D.print( S.get_sd_type() );
+    D.print(" error: "); D.print( sd.init() );
+    D.print(" type: ");  D.print( sd.get_sd_type() );
 
     for (;;) { }
 }

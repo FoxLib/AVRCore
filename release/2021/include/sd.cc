@@ -134,7 +134,6 @@ protected:
         return command(cmd, arg);
     }
 
-
 public:
 
     SD() { outp(SD_CMD, 0); }
@@ -179,8 +178,6 @@ public:
 
         // Отсылка ACMD = 0x29. Отсылать и ждать, пока не придет корректный ответ
         while ((status = acmd(0x29, arg)) != R1_READY_STATE) {
-
-            // Если таймаут вышел
             if (i++ > 4095) return set_error(SD_AcmdError);
         }
 
@@ -201,9 +198,6 @@ public:
             for (i = 0; i < 3; i++) get();
         }
 
-        // Выключить чип
-        _command(SPI_CMD_CE1);
-
-        return SD_OK;
+        return set_error(SD_OK);
     }
 };
