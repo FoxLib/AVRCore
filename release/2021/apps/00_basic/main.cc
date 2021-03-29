@@ -1,21 +1,14 @@
-#include <avr/interrupt.h>
-#include <stdlib.h>
-
-#include <screen.cc>
+#include <screen3.cc>
 #include <keyboard.cc>
-#include <graphicshi.cc>
 
-screen     D;
-graphics   G;
-graphicshi Gh;
-keyboard   K;
+screen3  D;
+keyboard K;
 
 int main() {
 
     D.init(7);
     D.locate(0, 0);
     D.print("Hello, world: ");
-    D.print(rand());
 
     for (;;) {
         D.print_char(K.getch());

@@ -1163,6 +1163,8 @@ int APP::step() {
             break;
         */
 
+        case IJMP:  pc = 2 * (get_Z()); cycles = 2; break;
+        case EIJMP: pc = 2 * (get_Z() + (sram[0x5B] << 16)); cycles = 2; break;
         case JMP:
 
             pc = 2 * ((get_jmp() << 16) | fetch());
@@ -1174,6 +1176,13 @@ int APP::step() {
             push16((pc + 2) >> 1);
             pc = 2 * ((get_jmp() << 16) | fetch());
             cycles = 2;
+            break;
+
+        case ICALL:
+
+            push16(pc >> 1);
+            pc = 2*get_Z();
+            cycles = 3;
             break;
 
         default:
@@ -1286,10 +1295,10 @@ void APP::assign() {
     assign_mask("000100rdddddrrrr", CPSE);  // +
 
     // Непрямые и длинные переходы
-    assign_mask("1001010100001001", ICALL);
+    assign_mask("1001010100001001", ICALL); // +
     assign_mask("1001010100011001", EICALL);
-    assign_mask("1001010000001001", IJMP);
-    assign_mask("1001010000011001", EIJMP);
+    assign_mask("1001010000001001", IJMP);  // +
+    assign_mask("1001010000011001", EIJMP); // +
     assign_mask("1001010kkkkk111k", CALL);  // +
     assign_mask("1001010kkkkk110k", JMP);   // +
 

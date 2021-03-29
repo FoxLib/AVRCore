@@ -75,7 +75,7 @@ public:
 
         block(0, 0, 319, 199, cl);
         return this;
-    }    
+    }
 
     // Установить точку
     Graphics* pset(int x, int y, byte cl) {
@@ -103,10 +103,12 @@ public:
 
         heap(vm, 0xf000);
 
+        cl &= 15;
+
         // Расчет инициирующей точки
-        word  xc = (x2>>1) - (x1>>1);     // Расстояние
-        word  cc = cl | (cl << 4);        // Сдвоенный цвет
-        word  z  = bank8(x1, y1);
+        word  xc = (x2>>1) - (x1>>1);   // Расстояние
+        word  cc = cl | (cl << 4);      // Сдвоенный цвет
+        word  z  = bank8(x1, y1);       // Начальный банк
         word  zc;
 
         // Коррекции, если не попадает
@@ -268,7 +270,7 @@ public:
         wipe_under = w;
         return this;
     }
-    
+
 
     // Печать в режиме телетайпа
     Graphics* printch(byte cl) {

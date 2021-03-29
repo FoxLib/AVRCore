@@ -8,18 +8,6 @@ protected:
 
     byte bankbase; // 0x20 или 0x30
 
-    // Вычисление банка пикселя для разрешения 640x
-    word pixelbank(word x, word y) {
-
-        // Вычисление базового адреса
-        dword A = ((dword)y<<6) + ((dword)y<<8) + (x>>1);
-
-        // Скоростная техника A>>12
-        bank( (((byte*)&A)[1]>>4) | (((byte*)&A)[2] ? 0x30:0x20) );
-
-        return A & 0xFFF;
-    }
-
 public:
 
     // 320x200: Выбор страницы
