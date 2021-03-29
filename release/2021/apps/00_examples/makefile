@@ -9,7 +9,7 @@ AVR     = ../../av/avr
 MIF		= php ../../../../utils/bin2mif.php
 
 all:
-	make run file=g320
+	make run file=gui
 %:
 	make run file=$@
 run:
