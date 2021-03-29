@@ -19,6 +19,8 @@ public:
     virtual void print_char(byte x, byte y, byte ch);
     // @ommited  Установка курсора
     virtual void locate(byte x, byte y) { cursor_x = x; cursor_y = y; }
+    // @ommited  Установка пикселя
+    virtual void pset(word x, word y, byte cl) { }
     // -----------------------------------------------------------------
 
     // Текущий цвет символа
@@ -102,4 +104,73 @@ public:
 
         return 0;
     }
+
+    // =================
+    // ГРАФИКА
+    // =================
+
+    // Рисование линии
+    void line(int x1, int y1, int x2, int y2, byte cl) {
+
+        if (y2 < y1) {
+            x1 ^= x2; x2 ^= x1; x1 ^= x2;
+            y1 ^= y2; y2 ^= y1; y1 ^= y2;
+        }
+
+        int deltax = x2 > x1 ? x2 - x1 : x1 - x2;
+        int deltay = y2 - y1;
+        int signx  = x1 < x2 ? 1 : -1;
+
+        int error2;
+        int error = deltax - deltay;
+
+        while (x1 != x2 || y1 != y2)
+        {
+            pset(x1, y1, cl);
+            error2 = error * 2;
+
+            if (error2 > -deltay) {
+                error -= deltay;
+                x1 += signx;
+            }
+
+            if (error2 < deltax) {
+                error += deltax;
+                y1 += 1;
+            }
+        }
+
+        pset(x1, y1, cl);
+    }
+
+    // Рисование окружности
+    void circle(int xc, int yc, int r, byte c) {
+
+        int x = 0;
+        int y = r;
+        int d = 3 - 2*y;
+
+        while (x <= y) {
+
+            // --
+            pset(xc - x, yc + y, c);
+            pset(xc + x, yc + y, c);
+            pset(xc - x, yc - y, c);
+            pset(xc + x, yc - y, c);
+            pset(xc + y, yc + x, c);
+            pset(xc - y, yc + x, c);
+            pset(xc + y, yc - x, c);
+            pset(xc - y, yc - x, c);
+            // ...
+
+            d += 4*x + 6;
+            if (d >= 0) {
+                d += 4*(1 - y);
+                y--;
+            }
+
+            x++;
+        }
+    }
+
 };
