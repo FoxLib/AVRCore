@@ -1,10 +1,10 @@
-#include <avr/interrupt.h>
-#include <graphics.cc>
-#include <keyboard.cc>
 #include <math.h>
+
+#include <screen13.cc>
+#include <keyboard.cc>
 #include "resources.h"
 
-graphics G;
+screen13 G;
 keyboard K;
 
 int main() {

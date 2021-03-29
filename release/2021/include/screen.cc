@@ -1,3 +1,4 @@
+#include "avrio.cc"
 #include "format.cc"
 
 class screen {
@@ -10,14 +11,14 @@ public:
 
     // Интерфейс
     // -----------------------------------------------------------------
-    // Запуск видеорежима
+    // @required Запуск видеорежима
     virtual void init();
-    // Очистка экрана
+    // @required Очистка экрана
     virtual void cls();
-    // Печать символа
+    // @required Печать символа
     virtual void print_char(byte x, byte y, byte ch);
-    // Установка курсора
-    virtual void locate(byte x, byte y);
+    // @ommited  Установка курсора
+    virtual void locate(byte x, byte y) { cursor_x = x; cursor_y = y; }
     // -----------------------------------------------------------------
 
     // Текущий цвет символа

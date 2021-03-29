@@ -1,8 +1,8 @@
 #include <avr/interrupt.h>
-#include <screen.cc>
+#include <screen3.cc>
 #include <keyboard.cc>
 
-screen   D;
+screen3  D;
 keyboard K;
 
 int main() {

@@ -1,10 +1,10 @@
-#include <graphics.cc>
+#include <screen13.cc>
 
-graphics G;
+screen13 G;
 
 int main() {
 
-    G.screen(0);
+    G.init();
     byte k = 0;
 
     for(;;) {

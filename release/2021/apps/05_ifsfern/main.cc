@@ -1,14 +1,13 @@
-#include <avr/interrupt.h>
-#include <graphics.cc>
+#include <screen12.cc>
 #include <stdlib.h>
 #include <math.h>
 
-graphics G;
+screen12 G;
 
 int main() {
 
-    G.screen12();
-    G.cls(0);
+    G.init();
+    G.cls();
 
     float nextx = 0, nexty = 0, x = 0, y = 0;
 
@@ -34,6 +33,6 @@ int main() {
         x = nextx;
         y = nexty;
 
-        G.pixel(320 + x*38, 399 - y*38, rand()&1 ? 2 : 10);
+        G.pset(320 + x*38, 399 - y*38, rand()&1 ? 2 : 10);
     }
 }

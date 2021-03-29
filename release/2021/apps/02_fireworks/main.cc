@@ -1,8 +1,7 @@
-#include <avr/interrupt.h>
-#include <graphics.cc>
+#include <screen13.cc>
 #include <math.h>
 
-graphics G;
+screen13 G;
 
 int random_id = 1;
 

@@ -1,9 +1,8 @@
-#include <avr/interrupt.h>
-#include <screen.cc>
+#include <screen3.cc>
 #include <sd.cc>
 
-screen D;
-SD     sd;
+screen3 D;
+SD      sd;
 
 /**
  * Тестирование чтения карты

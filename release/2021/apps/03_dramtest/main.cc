@@ -1,9 +1,8 @@
-#include <avr/interrupt.h>
-#include <screen.cc>
+#include <screen3.cc>
 #include <dram.cc>
 
-screen D;
-dram   M;
+screen3 D;
+dram    M;
 
 #define MAX 8*1024
 

@@ -1,17 +1,27 @@
-#include "avrio.cc"
+#include "screen.cc"
 
 struct vec2 { float x, y; };
 struct vec3 { float x, y, z; };
 
-class graphics {
+class screen13 : public screen {
 protected:
 
     byte bankbase; // 0x20 или 0x30
 
 public:
 
-    // 320x200: Выбор страницы
+    // -----------------------------------------------------------------
+    // Реализация виртуальных методов
+    // -----------------------------------------------------------------
+
     void init() { screen(0); }
+    void cls()  { cls(0); }
+    void print_char(byte x, byte y, byte ch) { }
+
+    // -----------------------------------------------------------------
+    // Методы работы с графикой
+    // -----------------------------------------------------------------
+
     void screen(byte _mode) {
 
         bankbase = _mode ? 0x30 : 0x20;
