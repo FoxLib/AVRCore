@@ -6,7 +6,8 @@ keyboard K;
 
 int main() {
 
-    D.init(7);
+    D.init();
+    D.cls(7);
     D.locate(0, 0);
     D.print("Hello, world: ");
 

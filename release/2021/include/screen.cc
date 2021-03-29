@@ -5,6 +5,7 @@ class screen {
 protected:
 
     byte   cursor_x, cursor_y, cursor_cl;
+    byte   width, height;
     format o_format;
 
 public:
@@ -17,6 +18,8 @@ public:
     virtual void cls();
     // @required Печать символа
     virtual void print_char(byte x, byte y, byte ch);
+    // @required Скроллинг экрана
+    virtual void scrollup();
     // @ommited  Установка курсора
     virtual void locate(byte x, byte y) { cursor_x = x; cursor_y = y; }
     // @ommited  Установка пикселя
@@ -24,43 +27,28 @@ public:
     // -----------------------------------------------------------------
 
     // Текущий цвет символа
-    void color(byte attr) {
-        cursor_cl = attr;
-    }
+    void color(byte attr) { cursor_cl = attr; }
 
     // Печать в режиме телетайпа
     void print_char(byte s) {
 
-        heapvm;
-        int i;
-
         if (s == 10) {
-            cursor_x = 80;
+            cursor_x = width;
         } else {
             print_char(cursor_x, cursor_y, s);
             cursor_x++;
         }
 
-        if (cursor_x >= 80) {
+        if (cursor_x >= width) {
             cursor_x = 0;
             cursor_y++;
         }
 
         // Скроллинг вверх
-        if (cursor_y >= 25) {
+        if (cursor_y >= height) {
 
-            for (i = 0; i < 4000 - 160; i += 2) {
-                vm[i]   = vm[i + 160];
-                vm[i+1] = vm[i + 161];
-            }
-
-            // Очистка новой строки
-            for (i = 4000 - 160; i < 4000; i += 2) {
-                vm[i]   = ' ';
-                vm[i+1] = cursor_cl;
-            }
-
-            cursor_y = 24;
+            scrollup();
+            cursor_y = height - 1;
         }
 
         locate(cursor_x, cursor_y);

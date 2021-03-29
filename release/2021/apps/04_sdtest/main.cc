@@ -17,7 +17,8 @@ int main() {
     D.print(" => ");    D.print( sd.get_error_code(), 16 );
     */
 
-    D.init(7);
+    D.init();
+    D.cls();
     D.hide();
 
     for (int k = 0; k < 1; k++) {

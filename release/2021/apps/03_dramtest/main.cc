@@ -8,7 +8,8 @@ dram    M;
 
 int main() {
 
-    D.init(7);
+    D.init();
+    D.cls();
     D.locate(0, 0);
 
     // Запись значений

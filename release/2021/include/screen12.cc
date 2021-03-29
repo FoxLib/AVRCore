@@ -21,9 +21,24 @@ public:
     // Реализация виртуальных методов
     // -----------------------------------------------------------------
 
-    void init() { outp(VIDEOMODE, 1); }
-    void cls()  { cls(0); }
-    void print_char(byte x, byte y, byte ch) { }
+    void init() { outp(VIDEOMODE, 1); color(15); width = 80; height = 25; }
+    void cls()  { cls(0); color(15); }
+    void print_char(byte x, byte y, byte ch) {
+
+        heapvm; bank(3);
+        byte font[16];
+        word px = x*8, py = y*16;
+
+        for (int i = 0; i < 16; i++) font[i] = vm[ch*16 + i];
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 8; j++) {
+                if ((font[i]<<j) & 0x80)
+                    pset(px+j, py+i, cursor_cl);
+            }
+        }
+    }
+
+    void scrollup() { }
 
     // -----------------------------------------------------------------
     // Методы работы с графикой
@@ -41,6 +56,8 @@ public:
                 vm[b] = c;
             }
         }
+
+        cursor_cl = 15;
     }
 
     // Установка точки на экране (640x400)

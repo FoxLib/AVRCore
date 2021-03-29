@@ -11,7 +11,9 @@ int timer; ISR(INT0_vect) {
 
 int main() {
 
-    D.init(7);
+    D.init();
+    D.cls();
+
     sei();
     for (;;);
 }
