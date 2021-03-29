@@ -5,21 +5,28 @@
 #include <keyboard.cc>
 #include <graphicshi.cc>
 
-screen     D;
-graphics   G;
-graphicshi Gh;
+graphicshi G;
 keyboard   K;
 
 int main() {
 
+    G.init();
+    G.cls(0);
+
+    for (int y = 0; y < 400; y++)
+    for (int x = 0; x < 640; x++)
+        G.pset(x, y, (x^y) + ((word)x*(word)y/32));
+
+    /*
     D.init(7);
     D.locate(0, 0);
     D.print("Hello, world: ");
-    D.print(rand());
+    D.print( rand() );
 
     for (;;) {
         D.print_char(K.getch());
     }
+    * */
 
     for (;;);
 }

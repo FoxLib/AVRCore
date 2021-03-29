@@ -23,32 +23,18 @@ protected:
 public:
 
     // 320x200: Выбор страницы
+    void init() { screen(0); }
     void screen(byte _mode) {
 
         bankbase = _mode ? 0x30 : 0x20;
         outp(VIDEOMODE, 2 + _mode);
     }
 
-    // 640x400
-    void screen12() {
-
-        bankbase = 0x20;
-        outp(VIDEOMODE, 1);
-    }
-
     // Очистить экран
     void cls(byte c) {
 
         heapvm;
-
-        int size = 16;
-        if (inp(VIDEOMODE) == 1) {
-
-            c = c | (c << 4);
-            size = 32;
-        }
-
-        for (int a = 0; a < size; a++) {
+        for (int a = 0; a < 16; a++) {
             bank(bankbase + a);
             for (int b = 0; b < 4096; b++) {
                 vm[b] = c;
@@ -63,16 +49,6 @@ public:
         word A = (y<<6) + (y<<8) + x;
         bank(bankbase + (A>>12));
         vm[A & 0xFFF] = cl;
-    }
-
-    // Установка точки на экране (640x400)
-    void pixel(word x, word y, byte cl) {
-
-        heapvm;
-        cl &= 15;
-
-        word A = pixelbank(x, y);
-        vm[A] = x&1 ? (cl)|(vm[A]&0xF0) : (cl<<4)|(vm[A]&0x0F);
     }
 
     // 24->8 бит

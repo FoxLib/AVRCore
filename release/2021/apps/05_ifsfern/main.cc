@@ -34,6 +34,6 @@ int main() {
         x = nextx;
         y = nexty;
 
-        G.pixel(320 + x*38, 399 - y*38, rnd < 0.5 ? 2 : 10);
+        G.pixel(320 + x*38, 399 - y*38, rand()&1 ? 2 : 10);
     }
 }

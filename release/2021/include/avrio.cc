@@ -2,7 +2,6 @@
 #define __AVRIO_HEADER_FILE
 
 // Ссылка на пустой адрес
-#define NULL        ((void*)0)
 #define brk         asm volatile("sleep"); // break
 
 // Базовые типы данных
