@@ -65,7 +65,7 @@ reg  [ 7:0] text_char;
 reg  [ 7:0] text_attr;
 reg  [11:0] cl_fore_;  reg  [11:0] cl_fore;
 reg  [11:0] cl_back_;  reg  [11:0] cl_back;
-reg  [ 7:0] color_320;
+reg  [ 7:0] color_gd;
 reg  [ 7:0] font_data;
 
 always @(posedge CLOCK) begin
@@ -115,13 +115,18 @@ always @(posedge CLOCK) begin
     case (videomode)
 
         // 640x400x16
-        // 1: case (XG[0]) 0: grph_address <= ...; 1: color_640 <= grph_data; endcase
+        1: case (XG[0])
+
+            0: grph_address <= cursor_h;
+            1: color_gd     <= grph_data;
+
+        endcase
 
         // 320x200x256
         2, 3: case (XG[0])
 
             0: begin grph_address <= {videomode[0], cursor_g}; end
-            1: begin color_320    <= grph_data; end
+            1: begin color_gd     <= grph_data; end
 
         endcase
 
@@ -133,11 +138,32 @@ always @(posedge CLOCK) begin
     begin
 
         case (videomode)
-        2, 3:    {VGA_R, VGA_G, VGA_B} <=
+        1: // 640x400x16
+        case (XG[0] ? color_gd[3:0] : color_gd[7:4])
+            0:  {VGA_R, VGA_G, VGA_B} <= 12'h111;
+            1:  {VGA_R, VGA_G, VGA_B} <= 12'h008;
+            2:  {VGA_R, VGA_G, VGA_B} <= 12'h080;
+            3:  {VGA_R, VGA_G, VGA_B} <= 12'h088;
+            4:  {VGA_R, VGA_G, VGA_B} <= 12'h800;
+            5:  {VGA_R, VGA_G, VGA_B} <= 12'h808;
+            6:  {VGA_R, VGA_G, VGA_B} <= 12'h880;
+            7:  {VGA_R, VGA_G, VGA_B} <= 12'hccc;
+            8:  {VGA_R, VGA_G, VGA_B} <= 12'h888;
+            9:  {VGA_R, VGA_G, VGA_B} <= 12'h00f;
+            10: {VGA_R, VGA_G, VGA_B} <= 12'h0f0;
+            11: {VGA_R, VGA_G, VGA_B} <= 12'h0ff;
+            12: {VGA_R, VGA_G, VGA_B} <= 12'hf00;
+            13: {VGA_R, VGA_G, VGA_B} <= 12'hf0f;
+            14: {VGA_R, VGA_G, VGA_B} <= 12'hff0;
+            15: {VGA_R, VGA_G, VGA_B} <= 12'hfff;
+        endcase
+
+        2, 3: // 320x200x256
+        {VGA_R, VGA_G, VGA_B} <=
         {   // 3:3:2
-            color_320[7:5],color_320[5],             // 3
-            color_320[4:2],color_320[2],             // 3
-            color_320[1:0],color_320[0],color_320[0] // 2
+            color_gd[7:5],color_gd[5],             // 3
+            color_gd[4:2],color_gd[2],             // 3
+            color_gd[1:0],color_gd[0],color_gd[0] // 2
         };
 
         default: {VGA_R, VGA_G, VGA_B} <= color;
