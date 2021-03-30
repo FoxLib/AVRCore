@@ -29,6 +29,9 @@ public:
         outp(VIDEOMODE, 2 + _mode);
     }
 
+    // 24->8 бит
+    byte rgb(byte r, byte g, byte b) { return (r&0xE0) | ((g&0xE0)>>3) | (b>>6); }
+
     // Очистить экран
     void cls(byte c) {
 
@@ -50,6 +53,4 @@ public:
         vm[A & 0xFFF] = cl;
     }
 
-    // 24->8 бит
-    byte rgb(byte r, byte g, byte b) { return (r&0xE0) | ((g&0xE0)>>3) | (b>>6); }
 };

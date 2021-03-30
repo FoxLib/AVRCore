@@ -5,7 +5,7 @@ class screen {
 protected:
 
     byte   cursor_x, cursor_y, cursor_cl;
-    byte   width, height;
+    word   width, height;
     format o_format;
 
 public:
@@ -30,7 +30,7 @@ public:
     void color(byte attr) { cursor_cl = attr; }
 
     // Печать в режиме телетайпа
-    void print_char(byte s) {
+    virtual void print_char(byte s) {
 
         if (s == 10) {
             cursor_x = width;
@@ -58,11 +58,7 @@ public:
     int print(const char* s) {
 
         int i = 0;
-
-        while (s[i]) {
-            print_char(s[i++]);
-        }
-
+        while (s[i]) print_char(s[i++]);
         return i;
     }
 

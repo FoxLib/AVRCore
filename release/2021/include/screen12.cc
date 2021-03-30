@@ -21,13 +21,13 @@ public:
     // Реализация виртуальных методов
     // -----------------------------------------------------------------
 
-    void init() { outp(VIDEOMODE, 1); color(15); width = 80; height = 25; }
+    void init() { outp(VIDEOMODE, 1); color(15); width = 640; height = 400; }
     void cls()  { cls(0); color(15); }
     void print_char(byte x, byte y, byte ch) {
 
         heapvm; bank(3);
         byte font[16];
-        word px = x*8, py = y*16;
+        word px = x, py = y;
 
         for (int i = 0; i < 16; i++) font[i] = vm[ch*16 + i];
         for (int i = 0; i < 16; i++) {
@@ -43,6 +43,21 @@ public:
     // -----------------------------------------------------------------
     // Методы работы с графикой
     // -----------------------------------------------------------------
+
+    void print_char(byte s) {
+
+        if (s == 10) {
+            cursor_x = width;
+        } else {
+            print_char(cursor_x, cursor_y, s);
+            cursor_x += 8;
+        }
+
+        if (cursor_x >= width) {
+            cursor_x = 0;
+            cursor_y += 16;
+        }
+    }
 
     // Очистить экран
     void cls(byte c) {

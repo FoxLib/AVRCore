@@ -5,12 +5,12 @@ gui G;
 int main() {
 
     G.init();
-    G.cls(1);
+    G.cls(3);
 
-    //G.window(100, 50, 320, 100);
+    G.window(28, 62, 320, 100);
 
-    G.locate(78, 1);
-    G.print("1234");
+    G.locate(32, 64);
+    G.print("Windows Not Must Die");
 
     for (;;);
 }
