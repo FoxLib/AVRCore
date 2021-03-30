@@ -22,8 +22,9 @@ public:
     virtual void scrollup();
     // @ommited  Установка курсора
     virtual void locate(byte x, byte y) { cursor_x = x; cursor_y = y; }
-    // @ommited  Установка пикселя
+    // @ommited  Установка пикселя и блока
     virtual void pset(word x, word y, byte cl) { }
+    virtual void block(word x1, word y1, word x2, word y2, byte cl) { }
     // -----------------------------------------------------------------
 
     // Текущий цвет символа
@@ -160,22 +161,16 @@ public:
     // Рисование окружности
     void circle_fill(int xc, int yc, int r, byte c) {
 
-        int i;
         int x = 0;
         int y = r;
         int d = 3 - 2*y;
 
         while (x <= y) {
 
-            for (i = xc-x; i <= xc+x; i++) {
-                pset(i, yc + y, c);
-                pset(i, yc - y, c);
-            }
-
-            for (i = xc-y; i <= xc+y; i++) {
-                pset(i, yc - x, c);
-                pset(i, yc + x, c);
-            }
+            block(xc-x, yc-y, xc+x, yc-y, c);
+            block(xc-x, yc+y, xc+x, yc+y, c);
+            block(xc-y, yc-x, xc+y, yc-x, c);
+            block(xc-y, yc+x, xc+y, yc+x, c);
 
             d += 4*x + 6;
             if (d >= 0) {

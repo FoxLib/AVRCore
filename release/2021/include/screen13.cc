@@ -53,6 +53,34 @@ public:
         vm[A & 0xFFF] = cl;
     }
 
+    // Рисование блока
+    void block(word x1, word y1, word x2, word y2, byte cl) {
+
+        heapvm;
+
+        word A = (y1<<8) + (y1<<6) + x1;
+        word B = bankbase + (A>>12);
+
+        A &= 0xFFF;
+        for (word y = y1; y <= y2; y++) {
+
+            bank(B);
+            word Ap = A;
+
+            // X++
+            for (word x = x1; x <= x2; x++) {
+
+                vm[A++] = cl;
+                if (A & 0x1000) { bank(inp(BANK)+1); A &= 0x0FFF; }
+            }
+
+            // Y++
+            A = (Ap + 320);
+            if (A & 0x1000) { B++; A &= 0x0FFF; }
+        }
+
+    }
+
     // Обмен буферов
     // Если выбран буфер 0 - пишутся данные в буфер 1, и наоборот
     void flip() {

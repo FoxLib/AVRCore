@@ -10,17 +10,35 @@ int main() {
     G.init();
     G.flip();
 
-    float k = 0;
+    float r = 30;
+    float x = r, y = r, speed_x = 2, speed_y = 0;
+    int px = r, py = y, px2 = r, py2 = y;
 
     for (;;) {
 
-        G.cls(0);
-        G.circle_fill(160 + sin(k)*100, 100 + cos(3*k)*50, 16, 50);
+        G.circle_fill(x, y, r, 0);
+
+        x += speed_x;
+        y += speed_y;
+
+        if (y >= 199-r) {
+            speed_y = -speed_y*0.98;
+            y = 199-r;
+        }
+
+        if (x >= 319-r) { x = 319-r; speed_x = -speed_x; }
+        else if (x < r) { x = r;     speed_x = -speed_x; }
+
+        speed_x *= 0.999;
+        speed_y += 0.1;
+
+        // Рисовать шарик
+        G.circle_fill(x, y, r, 90);
         G.flip();
 
-        k += 0.03;
-        //K.getch();
+        // Стереть шарик, который был нарисован на -2 шаге
+        G.circle_fill(px2, py2, r, 0);
+        px  = x;  py  = y;
+        px2 = px; py2 = py;
     }
-
-    //for (;;);
 }
