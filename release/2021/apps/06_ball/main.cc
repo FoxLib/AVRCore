@@ -16,7 +16,6 @@ int main() {
 
         G.cls(0);
         G.circle_fill(160 + sin(k)*100, 100 + cos(3*k)*50, 16, 50);
-
         G.flip();
 
         k += 0.03;

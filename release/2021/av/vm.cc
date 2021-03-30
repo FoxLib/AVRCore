@@ -426,7 +426,7 @@ void APP::main() {
             require_halt = 0;
 
             // Запрос обновления экрана в режиме экрана (flash)
-            if (require_disp_update && !ds_debugger && videomode == 0) { display_update(); }
+            if (require_disp_update && !ds_debugger) { display_update(); }
 
             flip();
         }
@@ -1191,6 +1191,7 @@ int APP::step() {
             exit(1);
     }
 
+    cycles = cycles ? cycles : 1;
     instr_counter += cycles;
     return cycles;
 }

@@ -108,7 +108,7 @@ void APP::put(int addr, unsigned char value) {
         case 0x38:
 
             videomode = value;
-            update_screen();
+            require_disp_update = 1;
             break;
 
         // SPI
