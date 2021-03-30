@@ -53,4 +53,12 @@ public:
         vm[A & 0xFFF] = cl;
     }
 
+    // Обмен буферов
+    // Если выбран буфер 0 - пишутся данные в буфер 1, и наоборот
+    void flip() {
+
+        byte mode = inp(VIDEOMODE);
+        outp(VIDEOMODE, mode ^ 1);
+        bankbase = (mode&1) ? 0x30 : 0x20;
+    }
 };

@@ -157,4 +157,34 @@ public:
         }
     }
 
+    // Рисование окружности
+    void circle_fill(int xc, int yc, int r, byte c) {
+
+        int i;
+        int x = 0;
+        int y = r;
+        int d = 3 - 2*y;
+
+        while (x <= y) {
+
+            for (i = xc-x; i <= xc+x; i++) {
+                pset(i, yc + y, c);
+                pset(i, yc - y, c);
+            }
+
+            for (i = xc-y; i <= xc+y; i++) {
+                pset(i, yc - x, c);
+                pset(i, yc + x, c);
+            }
+
+            d += 4*x + 6;
+            if (d >= 0) {
+                d += 4*(1-y);
+                y--;
+            }
+
+            x++;
+        }
+    }
+
 };
