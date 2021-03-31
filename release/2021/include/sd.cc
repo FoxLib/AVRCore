@@ -50,7 +50,6 @@ enum SD_Types {
     SD_CARD_TYPE_SDHC   = 3
 };
 
-
 class SD {
 protected:
 
