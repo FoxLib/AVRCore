@@ -27,19 +27,18 @@ public:
     // Очистка экрана
     void cls() { cls(cursor_cl, 0x20); }
 
+    // Реализация второго вида виртуального метода
+    void print_char(byte s) { screen::print_char(s); }
+
     // Печать символа на экране
     void print_char(byte x, byte y, byte ch) {
 
         heapvm;
-        int   z = (x<<1) + (y<<7) + (y<<5);
-
         bank(2);
+        int z = (x<<1) + (y<<7) + (y<<5);
         vm[z]   = ch;
         vm[z+1] = cursor_cl;
     }
-
-    // Реализация второго вида виртуального метода
-    void print_char(byte s) { screen::print_char(s); }
 
     // Переместить курсор
     void locate(byte x, byte y) {
@@ -80,10 +79,13 @@ public:
     void cls(byte attr, byte ch) {
 
         heapvm;
+        bank(2);
+
         for (int i = 0; i < 4000; i += 2) {
             vm[i]   = ch;
             vm[i+1] = attr;
         }
+
         cursor_cl = attr;
     }
 
@@ -95,6 +97,7 @@ public:
     void palette(byte id, byte r, byte g, byte b) {
 
         heapvm;
+        bank(2);
 
         vm[2*id + 1] = (r >> 4);
         vm[2*id + 0] = (g & 0xF0) | (b >> 4);
