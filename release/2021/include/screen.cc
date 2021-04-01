@@ -70,6 +70,9 @@ public:
         return print((const char*) o_format.buffer);
     }
 
+    // @TODO переделать в d2a
+    int print(double v) { return print((float)v); }
+
     // Печать float-числа
     int print(float v, int n) {
 
