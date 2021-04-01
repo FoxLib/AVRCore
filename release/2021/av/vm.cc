@@ -1185,6 +1185,31 @@ int APP::step() {
             cycles = 3;
             break;
 
+        // Аппаратное умножение
+        case MUL:
+
+            d = get_rd();
+            r = get_rr();
+            v = (r * d) & 0xffff;
+            put16(0, v);
+
+            flag.c = v >> 15;
+            flag.z = v == 0;
+            flag_to_byte();
+
+            //printf("Инструкция MUL $%04x в pc=$%04x\n", opcode, pc - 2); exit(2);
+            break;
+
+        case MULS:
+
+            printf("Инструкция MUL $%04x в pc=$%04x\n", opcode, pc - 2); exit(2);
+            break;
+
+        case MULSU:
+
+            printf("Инструкция MUL $%04x в pc=$%04x\n", opcode, pc - 2); exit(2);
+            break;
+
         default:
 
             printf("Неизвестная инструкция $%04x в pc=$%04x\n", opcode, pc - 2);
@@ -1374,6 +1399,11 @@ void APP::assign() {
     assign_mask("1001001ddddd1111", PUSH);  // +
     assign_mask("1001000ddddd1111", POP);   // +
     assign_mask("10010100KKKK1011", DES);
+
+    // Расширенные
+    assign_mask("100111rdddddrrrr", MUL);
+    assign_mask("00000010ddddrrrr", MULS);
+    assign_mask("000000110ddd0rrr", MULSU);
 }
 
 // ---------------------------------------------------------------------

@@ -5,6 +5,10 @@ struct FAT_partition {
     dword lba, size;
 };
 
+struct FAT_info {
+
+};
+
 class FAT : public SD {
 protected:
 
@@ -29,5 +33,13 @@ public:
             partitions[i].lba  = ((dword*)(t+8))[0];
             partitions[i].size = ((dword*)(t+12))[0];
         }
+    }
+
+    // Получение основной информации о FAT-таблице
+    struct FAT_info get_fat_info(int pid) {
+
+        struct FAT_info t;
+
+        return t;
     }
 };

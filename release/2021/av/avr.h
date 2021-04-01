@@ -30,7 +30,8 @@ enum AVROpcodes {
     LDX,    LDX_,   LD_X,   LDY_,   LD_Y,   LDYQ,   LDZ_,   LD_Z,   LDZQ,
     STX,    STX_,   ST_X,   STY_,   ST_Y,   STYQ,   STZ_,   ST_Z,   STZQ,
     LPM0Z,  LPMRZ,  LPMRZ_, ELPM0Z, ELPMRZ, ELPMRZ_, SPM,   SPM2,
-    SLEEP,  WDR,    BREAK,  NOP,    IN,     OUT,    PUSH,   POP,    DES
+    SLEEP,  WDR,    BREAK,  NOP,    IN,     OUT,    PUSH,   POP,    DES,
+    MUL,    MULS,   MULSU
 };
 
 // Палитра для DOS 320x200 MODE 13h
@@ -263,7 +264,7 @@ public:
     void put_Y(unsigned short a) { sram[0x1C] = a & 0xFF; sram[0x1D] = (a >> 8) & 0xFF; }
     void put_Z(unsigned short a) { sram[0x1E] = a & 0xFF; sram[0x1F] = (a >> 8) & 0xFF; }
 
-    void put16(int a, unsigned short v) { sram[a] = v & 0xff; sram[a+1] = (v >> 8) & 0xff; }
+    void put16(int a, unsigned short v) { put(a, v); put(a+1, v>>8); }
     unsigned short get16(int a)  { return sram[a] + 256*sram[a+1]; }
 
     void put(int, unsigned char);

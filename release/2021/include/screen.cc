@@ -70,6 +70,13 @@ public:
         return print((const char*) o_format.buffer);
     }
 
+    int print(float v) { return print(v, 2); }
+    int print(float v, int n) {
+
+        o_format.f2a(v, n);
+        return print((const char*) o_format.buffer);
+    }
+
     int println(const char* s) { byte ln = print(s); print_char(10); return ln; }
     int println(long v)        { byte ln = print(v); print_char(10); return ln; }
 

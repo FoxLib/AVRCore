@@ -89,6 +89,7 @@ reg [ 1:0]  sp_mth  = 0;                // Увеличение или умен�
 // 16 битные регистры
 reg         reg_ww  = 0;                // Писать в X,Y,Z
 reg         reg_ws  = 0;                // =1 Источник АЛУ; =0 Источник регистр `wb2`
+reg         reg_wm  = 0;                // Запись в 1:0
 reg [ 1:0]  reg_idw = 0;                // Номер 16-битного регистра
 reg [15:0]  wb2     = 0;                // Данные для записи в X,Y,Z
 reg [ 7:0]  rampz   = 0;                // Верхняя память для E-функции
@@ -172,6 +173,7 @@ begin
     sp_mth <= 1'b0; // Ничего не делать с SP
     reg_ww <= 1'b0; // Ничего не делать с X,Y,Z
     reg_ws <= 1'b0; // Источник регистр wb2
+    reg_wm <= 1'b0; // Источник регистр resw
 
     if (tstate == 0) latch <= ir;
 
@@ -827,6 +829,17 @@ begin
 
         endcase
 
+        // MUL
+        16'b1001_11xx_xxxx_xxxx: begin
+
+            pc      <= pcnext;
+            alu     <= 23;  // MUL
+            op1     <= r[rd];
+            op2     <= r[rr];
+            reg_wm  <= 1;
+
+        end
+
     endcase
 
 end
@@ -856,6 +869,13 @@ always @(negedge clock) begin
             3: {r[31], r[30]} <= reg_ws ? resw : wb2; // Z
 
         endcase
+
+    end
+
+    // Инструкции MUL
+    if (reg_wm) begin
+
+        {r[1], r[0]} <= resw;
 
     end
 
@@ -889,8 +909,8 @@ endmodule
 // 2 SBC    B  <SREG>   13 DEC
 // 3 ADD    C  COM      14 ADIW
 // 5 CP     D  NEG      15 SBIW
-// 6 SUB    E  SWAP
-// 7 ADC    F  INC
+// 6 SUB    E  SWAP     16 BLD
+// 7 ADC    F  INC      17 MUL
 // 8 AND    10 ASR
 // ---------------------------------------------------------------------
 
@@ -929,6 +949,7 @@ reg        carry;
 // 16 битные вычисления
 wire [15:0] adiw = op1w + r;
 wire [15:0] sbiw = op1w - r;
+wire [15:0] mul  = r*d;
 
 // Флаги переполнения после сложения и вычитания
 wire add_flag_v = (d[7] &  r[7] & !R[7]) | (!d[7] & !r[7] & R[7]);
@@ -1085,6 +1106,19 @@ wire [7:0] set_sbiw_flag = {
     /* c */ adiw_v
 };
 
+// Флаги после MUL
+wire [7:0] set_mul_flag = {
+
+    /* i */ s[7],
+    /* t */ s[6],
+    /* h */ s[5],
+    /* s */ s[7],
+    /* v */ s[7],
+    /* n */ s[7],
+    /* z */ (mul[15:0] == 0),
+    /* c */ mul[15]
+};
+
 always @(*) begin
 
     S = s;
@@ -1127,6 +1161,7 @@ always @(*) begin
             endcase
 
         end
+        /* MUL  */ 23: begin resw = mul;   S = set_mul_flag; end
 
         default: R = 8'hFF;
 
