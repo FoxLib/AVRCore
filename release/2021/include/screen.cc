@@ -1,3 +1,4 @@
+#include <avr/pgmspace.h>
 #include "avrio.cc"
 #include "format.cc"
 
