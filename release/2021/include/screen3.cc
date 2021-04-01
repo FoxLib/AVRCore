@@ -56,6 +56,8 @@ public:
     void scrollup() {
 
         heapvm;
+        bank(2);
+
         int i;
         for (i = 0; i < 4000 - 160; i += 2) {
             vm[i]   = vm[i + 160];
