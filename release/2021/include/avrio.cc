@@ -1,13 +1,13 @@
 #ifndef __AVRIO_HEADER_FILE
 #define __AVRIO_HEADER_FILE
 
-// Ссылка на пустой адрес
-#define brk         asm volatile("sleep"); // break
-
 // Базовые типы данных
-#define byte        unsigned char
-#define word        unsigned int
-#define dword       unsigned long
+#define byte  unsigned char
+#define word  unsigned int
+#define dword unsigned long
+
+// Ссылка на пустой адрес
+#define brk asm volatile("sleep"); // break
 
 enum EnumStatuses {
 

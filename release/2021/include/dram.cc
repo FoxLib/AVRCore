@@ -1,3 +1,5 @@
+#include "avrio.cc"
+
 class dram {
 protected:
 public:
@@ -40,5 +42,4 @@ public:
         while (inp(STATUS) & DRAM_BSY);
         return inp(DRAMD);
     }
-
 };

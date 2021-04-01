@@ -1,10 +1,10 @@
 #include <screen3.cc>
 #include <dram.cc>
 
+#define MAX 8*1024
+
 screen3 D;
 dram    M;
-
-#define MAX 8*1024
 
 int main() {
 

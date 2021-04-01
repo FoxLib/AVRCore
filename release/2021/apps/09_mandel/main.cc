@@ -1,6 +1,5 @@
 #include <screen13.cc>
 
-// Текстовый видеорежим
 screen13 G;
 
 int mandel(float cx, float cy) {
