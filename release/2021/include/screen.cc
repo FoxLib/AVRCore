@@ -70,18 +70,14 @@ public:
         return print((const char*) o_format.buffer);
     }
 
-    int print(float v) { return print(v, 2); }
+    // Печать float-числа
     int print(float v, int n) {
 
         o_format.f2a(v, n);
         return print((const char*) o_format.buffer);
     }
 
-    int println(const char* s) { byte ln = print(s); print_char(10); return ln; }
-    int println(long v)        { byte ln = print(v); print_char(10); return ln; }
-
     // size=1, 2, 4
-    int print(long v, byte radix) { return print(v, radix, 1); }
     int print(long v, byte radix, int size) {
 
         if (radix == 16) {
@@ -96,6 +92,14 @@ public:
 
         return 0;
     }
+
+    // Алиасы
+    int println(const char* s) { byte ln = print(s); print_char(10); return ln; }
+    int println(long v)        { byte ln = print(v); print_char(10); return ln; }
+    int print(int v) { return print((long)v); }
+    int print(dword v) { return print((long)v); }
+    int print(float v) { return print(v, 2); }
+    int print(long v, byte radix) { return print(v, radix, 1); }
 
     // =================
     // ГРАФИКА

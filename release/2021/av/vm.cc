@@ -1196,8 +1196,6 @@ int APP::step() {
             flag.c = v >> 15;
             flag.z = v == 0;
             flag_to_byte();
-
-            //printf("Инструкция MUL $%04x в pc=$%04x\n", opcode, pc - 2); exit(2);
             break;
 
         case MULS:
