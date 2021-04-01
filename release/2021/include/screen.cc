@@ -55,6 +55,10 @@ public:
         locate(cursor_x, cursor_y);
     }
 
+    /**
+     * @desc Печать строк и так далее на экране
+     */
+
     // Печать строки
     int print(const char* s) {
 
@@ -94,6 +98,15 @@ public:
         }
 
         return 0;
+    }
+
+    // Печать строки из Program memory
+    int print_pgm(const char* m) {
+
+        int i = 0;
+        char ch;
+        while (ch = pgm_read_byte(& m[i++])) print_char(ch);
+        return i;
     }
 
     // Алиасы

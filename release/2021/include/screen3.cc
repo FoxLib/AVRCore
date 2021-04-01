@@ -33,6 +33,7 @@ public:
         heapvm;
         int   z = (x<<1) + (y<<7) + (y<<5);
 
+        bank(2);
         vm[z]   = ch;
         vm[z+1] = cursor_cl;
     }

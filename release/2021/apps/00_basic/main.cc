@@ -1,11 +1,15 @@
+#include <avr/pgmspace.h>
 #include <screen3.cc>
-#include <math.h>
 
-screen3 D; 
+// Текстовый видеорежим
+screen3 D;
+
+// pgm_read_byte(&program[0])
+const byte program[] PROGMEM = "Program Space\0";
 
 int main() {
 
-    D.init(); 
+    D.init();
     D.cls(7);
 
     for (;;);

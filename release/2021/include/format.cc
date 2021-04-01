@@ -2,7 +2,7 @@ class format {
 protected:
 public:
 
-    byte buffer[80];
+    byte buffer[64];
 
     // Печать числа -2147483647 .. 2147483647
     byte i2a(long v) {
