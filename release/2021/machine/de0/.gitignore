@@ -23,4 +23,9 @@ greybox_tmp
 undo_redo.txt
 PLLJ_PLLSPE_INFO.txt
 c5_pin_model_dump.txt
+
+# Генерируются из .dist-файлов
 memflash.mif
+memtext.mif
+memvideo.mif
+mem32k.mif
