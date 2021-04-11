@@ -1,4 +1,3 @@
-#include <avr/pgmspace.h>
 #include "avrio.cc"
 #include "format.cc"
 
@@ -26,6 +25,10 @@ public:
     // @ommited  Установка пикселя и блока
     virtual void pset(word x, word y, byte cl) { }
     virtual void block(word x1, word y1, word x2, word y2, byte cl) { }
+
+    // 24->4/8 бит
+    virtual byte rgb(byte r, byte g, byte b) { return 0; }
+
     // -----------------------------------------------------------------
 
     // Текущий цвет символа
@@ -121,6 +124,33 @@ public:
     // =================
     // ГРАФИКА
     // =================
+
+    // Дизеринг паттерном
+    void setpixel(word x, word y, int r, int g, int b) {
+
+        int lookup[8][8] =
+        {
+            { 0, 32,  8, 40,  2, 34, 10, 42},
+            {48, 16, 56, 24, 50, 18, 58, 26},
+            {12, 44,  4, 36, 14, 46,  6, 38},
+            {60, 28, 52, 20, 62, 30, 54, 22},
+            { 3, 35, 11, 43,  1, 33,  9, 41},
+            {51, 19, 59, 27, 49, 17, 57, 25},
+            {15, 47,  7, 39, 13, 45,  5, 37},
+            {63, 31, 55, 23, 61, 29, 53, 21},
+        };
+
+        r += lookup[y&7][x&7] - 32;
+        g += lookup[y&7][x&7] - 32;
+        b += lookup[y&7][x&7] - 32;
+
+        // Учесть ограничения
+        if (r < 0) r = 0; else if (r > 255) r = 255;
+        if (g < 0) g = 0; else if (g > 255) g = 255;
+        if (b < 0) b = 0; else if (b > 255) b = 255;
+
+        pset(x, y, rgb(r, g, b));
+    }
 
     // Рисование линии
     void line(int x1, int y1, int x2, int y2, byte cl) {

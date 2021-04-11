@@ -1,5 +1,24 @@
 #include "screen.cc"
 
+const static byte color16[16][3] PROGMEM = {
+    {0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x88},
+    {0x00, 0x88, 0x00},
+    {0x00, 0x88, 0x88},
+    {0x88, 0x00, 0x00},
+    {0x88, 0x00, 0x88},
+    {0x88, 0x88, 0x00},
+    {0xcc, 0xcc, 0xcc},
+    {0x88, 0x88, 0x88},
+    {0x00, 0x00, 0xff},
+    {0x00, 0xff, 0x00},
+    {0x00, 0xff, 0xff},
+    {0xff, 0x00, 0x00},
+    {0xff, 0x00, 0xff},
+    {0xff, 0xff, 0x00},
+    {0xff, 0xff, 0xff},
+};
+
 class screen12 : public screen {
 protected:
 
@@ -22,7 +41,7 @@ public:
     // -----------------------------------------------------------------
 
     void init() { outp(VIDEOMODE, 1); color(15); width = 640; height = 400; }
-    void cls()  { cls(0); color(15); }
+    void cls()  { init(); cls(0); }
     void print_char(byte x, byte y, byte ch) {
 
         heapvm; bank(3);
@@ -133,5 +152,28 @@ public:
         // Дорисовать линии слева и справа
         if ( (x1 & 1)) for (word i = y1; i <= y2; i++) pset(x1, i, cl);
         if (!(x2 & 1)) for (word i = y1; i <= y2; i++) pset(x2, i, cl);
+    }
+
+    // Поиск ближнего цвета к заданному
+    byte rgb(byte r, byte g, byte b) {
+
+        byte color = 0;
+
+        long distmin = 4*65536;
+        for (int i = 0; i < 16; i++) {
+
+            long r2 = (r - LPM(color16[i][0])),
+                 g2 = (g - LPM(color16[i][1])),
+                 b2 = (b - LPM(color16[i][2]));
+
+            long dist = r2*r2 + g2*g2 + b2*b2;
+
+            if (dist < distmin) {
+                distmin = dist;
+                color = i;
+            }
+        }
+
+        return color;
     }
 };

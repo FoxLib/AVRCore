@@ -1,6 +1,9 @@
 #ifndef __AVRIO_HEADER_FILE
 #define __AVRIO_HEADER_FILE
 
+#include <avr/pgmspace.h>
+#define LPM(x) pgm_read_byte(&x)
+
 // Ссылка на пустой адрес
 #define brk asm volatile("sleep")
 

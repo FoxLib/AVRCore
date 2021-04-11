@@ -35,6 +35,7 @@ public:
 
         heapvm;
         bank(2);
+
         int z = (x<<1) + (y<<7) + (y<<5);
         vm[z]   = ch;
         vm[z+1] = cursor_cl;
@@ -79,7 +80,7 @@ public:
     void cls(byte attr, byte ch) {
 
         heapvm;
-        bank(2);
+        init();
 
         for (int i = 0; i < 4000; i += 2) {
             vm[i]   = ch;

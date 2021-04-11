@@ -15,7 +15,7 @@ public:
     // -----------------------------------------------------------------
 
     void init() { screen(0); color(15); width = 40; height = 25; }
-    void cls()  { cls(0); }
+    void cls()  { init(); cls(0); }
     void print_char(byte x, byte y, byte ch) { }
     void scrollup() { }
 
@@ -89,4 +89,5 @@ public:
         outp(VIDEOMODE, mode ^ 1);
         bankbase = (mode&1) ? 0x30 : 0x20;
     }
+
 };
