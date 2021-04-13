@@ -1,6 +1,8 @@
 #include "avrio.cc"
 #include "format.cc"
 
+struct RGB { byte r, b, g; };
+
 class screen {
 protected:
 
@@ -126,7 +128,7 @@ public:
     // =================
 
     // Дизеринг паттерном
-    void setpixel(word x, word y, int r, int g, int b) {
+    void setpixel(word x, word y, byte _r, byte _g, byte _b) {
 
         int lookup[8][8] =
         {
@@ -140,9 +142,10 @@ public:
             {63, 31, 55, 23, 61, 29, 53, 21},
         };
 
-        r += lookup[y&7][x&7] - 32;
-        g += lookup[y&7][x&7] - 32;
-        b += lookup[y&7][x&7] - 32;
+        // Размытие
+        int r = _r + lookup[y&7][x&7] - 32;
+        int g = _g + lookup[y&7][x&7] - 32;
+        int b = _b + lookup[y&7][x&7] - 32;
 
         // Учесть ограничения
         if (r < 0) r = 0; else if (r > 255) r = 255;
@@ -239,4 +242,5 @@ public:
             x++;
         }
     }
+
 };

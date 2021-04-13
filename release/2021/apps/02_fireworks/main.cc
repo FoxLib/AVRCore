@@ -47,7 +47,8 @@ int main() {
             }
             else {
 
-                if (fp[i].y >= 0) G.pset(fp[i].x, fp[i].y, fp[i].lt);
+                int m = fp[i].lt;
+                if (fp[i].y >= 0) G.pset(fp[i].x, fp[i].y, m);
 
                 fp[i].x  += fp[i].sx;
                 fp[i].y  += fp[i].sy;

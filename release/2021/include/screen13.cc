@@ -47,6 +47,8 @@ public:
     // Установка точки на экране (320x200)
     void pset(word x, word y, byte cl) {
 
+        if (x >= 320 || y >= 200) return;
+
         heapvm;
         word A = (y<<6) + (y<<8) + x;
         bank(bankbase + (A>>12));

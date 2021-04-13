@@ -833,9 +833,20 @@ begin
         16'b1001_11xx_xxxx_xxxx: begin
 
             pc      <= pcnext;
-            alu     <= 23;  // MUL
+            alu     <= 23;
             op1     <= r[rd];
             op2     <= r[rr];
+            reg_wm  <= 1;
+
+        end
+
+        // MULSU d16..23, r16..23
+        16'b0000_0011_0xxx_0xxx: begin
+
+            pc      <= pcnext;
+            alu     <= 25;
+            op1     <= r[ {2'b10, opcode[6:4]} ];
+            op2     <= r[ {2'b10, opcode[2:0]} ];
             reg_wm  <= 1;
 
         end
@@ -904,14 +915,14 @@ endmodule
 
 // Режим работы АЛУ
 // ---------------------------------------------------------------------
-// 0 LDI    9  EOR      11 LSR
+// 0 LDI    9  EOR      11 LSR      19 MULSU
 // 1 CPC    A  OR       12 ROR
 // 2 SBC    B  <SREG>   13 DEC
 // 3 ADD    C  COM      14 ADIW
 // 5 CP     D  NEG      15 SBIW
 // 6 SUB    E  SWAP     16 BLD
 // 7 ADC    F  INC      17 MUL
-// 8 AND    10 ASR
+// 8 AND    10 ASR      18 MULS
 // ---------------------------------------------------------------------
 
 module alu(
@@ -947,9 +958,11 @@ wire [7:0] swap = {d[3:0], d[7:4]};
 reg        carry;
 
 // 16 битные вычисления
-wire [15:0] adiw = op1w + r;
-wire [15:0] sbiw = op1w - r;
-wire [15:0] mul  = r*d;
+wire [15:0] adiw  = op1w + r;
+wire [15:0] sbiw  = op1w - r;
+wire [15:0] mul   = d[7:0] * r[7:0];
+wire [15:0] mulsu = {{8{d[7]}}, d[7:0]} * r[7:0];
+wire [15:0] muls  = {{8{d[7]}}, d[7:0]} * {{8{r[7]}}, r[7:0]};
 
 // Флаги переполнения после сложения и вычитания
 wire add_flag_v = (d[7] &  r[7] & !R[7]) | (!d[7] & !r[7] & R[7]);
@@ -1126,28 +1139,28 @@ always @(*) begin
 
     case (mode)
 
-        /* LDI  */ 0:  begin R = r; end
-        /* CPC  */ 1:  begin R = sbc[7:0]; S = set_subcarry_flag; end
-        /* SBC  */ 2:  begin R = sbc[7:0]; S = set_subcarry_flag; end
-        /* ADD  */ 3:  begin R = add;      S = set_add_flag;      carry = 0; end
-        /* CP   */ 5:  begin R = sub;      S = set_subtract_flag; end
-        /* SUB  */ 6:  begin R = sub;      S = set_subtract_flag; end
-        /* ADC  */ 7:  begin R = adc;      S = set_add_flag;      carry = s[0]; end
-        /* AND  */ 8:  begin R = d & r;    S = set_logic_flag; end
-        /* EOR  */ 9:  begin R = d ^ r;    S = set_logic_flag; end
-        /* OR   */ 10: begin R = d | r;    S = set_logic_flag; end
-        /* SREG */ 11: begin S = r;        end
-        /* COM  */ 12: begin R = com;      S = set_com_flag; end
-        /* NEG  */ 13: begin R = neg;      S = set_neg_flag; end
-        /* SWAP */ 14: begin R = swap;     end
-        /* INC  */ 15: begin R = inc;      S = set_inc_flag; end
-        /* ASR  */ 16: begin R = asr;      S = set_lsr_flag; end
-        /* LSR  */ 17: begin R = lsr;      S = set_lsr_flag; end
-        /* ROR  */ 18: begin R = ror;      S = set_lsr_flag; end
-        /* DEC  */ 19: begin R = dec;      S = set_dec_flag; end
-        /* ADIW */ 20: begin resw = adiw;  S = set_adiw_flag; end
-        /* SBIW */ 21: begin resw = sbiw;  S = set_sbiw_flag; end
-        /* BLD  */ 22: begin
+        /* LDI   */ 0:  begin R = r; end
+        /* CPC   */ 1:  begin R = sbc[7:0]; S = set_subcarry_flag; end
+        /* SBC   */ 2:  begin R = sbc[7:0]; S = set_subcarry_flag; end
+        /* ADD   */ 3:  begin R = add;      S = set_add_flag;      carry = 0; end
+        /* CP    */ 5:  begin R = sub;      S = set_subtract_flag; end
+        /* SUB   */ 6:  begin R = sub;      S = set_subtract_flag; end
+        /* ADC   */ 7:  begin R = adc;      S = set_add_flag;      carry = s[0]; end
+        /* AND   */ 8:  begin R = d & r;    S = set_logic_flag; end
+        /* EOR   */ 9:  begin R = d ^ r;    S = set_logic_flag; end
+        /* OR    */ 10: begin R = d | r;    S = set_logic_flag; end
+        /* SREG  */ 11: begin S = r;        end
+        /* COM   */ 12: begin R = com;      S = set_com_flag; end
+        /* NEG   */ 13: begin R = neg;      S = set_neg_flag; end
+        /* SWAP  */ 14: begin R = swap;     end
+        /* INC   */ 15: begin R = inc;      S = set_inc_flag; end
+        /* ASR   */ 16: begin R = asr;      S = set_lsr_flag; end
+        /* LSR   */ 17: begin R = lsr;      S = set_lsr_flag; end
+        /* ROR   */ 18: begin R = ror;      S = set_lsr_flag; end
+        /* DEC   */ 19: begin R = dec;      S = set_dec_flag; end
+        /* ADIW  */ 20: begin resw = adiw;  S = set_adiw_flag; end
+        /* SBIW  */ 21: begin resw = sbiw;  S = set_sbiw_flag; end
+        /* BLD   */ 22: begin
 
             case (r[2:0])
                 0: R = {d[7:1], s[6]};
@@ -1161,7 +1174,9 @@ always @(*) begin
             endcase
 
         end
-        /* MUL  */ 23: begin resw = mul;   S = set_mul_flag; end
+        /* MUL   */ 23: begin resw = mul;   S = set_mul_flag; end
+        /* MULS  */ 24: begin resw = muls;  S = set_mul_flag; end
+        /* MULSU */ 25: begin resw = mulsu; S = set_mul_flag; end
 
         default: R = 8'hFF;
 

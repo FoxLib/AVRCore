@@ -1200,12 +1200,21 @@ int APP::step() {
 
         case MULS:
 
-            printf("Инструкция MUL $%04x в pc=$%04x\n", opcode, pc - 2); exit(2);
+            printf("Инструкция MULS $%04x в pc=$%04x\n", opcode, pc - 2); exit(2);
             break;
 
+        // Signed * Unsigned
         case MULSU:
 
-            printf("Инструкция MUL $%04x в pc=$%04x\n", opcode, pc - 2); exit(2);
+            d = sram[ 0x10 | ((opcode & 0x70)>>4) ];
+            r = sram[ 0x10 |  (opcode & 0x07) ];
+            d = (d & 0x80 ? 0xff00 : 0) | d; // Перевод в знаковый
+            v = (r * d) & 0xffff;
+            put16(0, v);
+
+            flag.c = v >> 15;
+            flag.z = v == 0;
+            flag_to_byte();
             break;
 
         default:

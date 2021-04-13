@@ -97,6 +97,8 @@ public:
     // Установка точки на экране (640x400)
     void pset(word x, word y, byte cl) {
 
+        if (x >= 640 || y >= 400) return;
+
         heapvm;
         cl &= 15;
 
