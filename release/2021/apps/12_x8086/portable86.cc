@@ -495,6 +495,7 @@ void initcpu() {
 
     loadcs(0xf000);
     ip = 0x0000;
+    inhlt = 0;
 }
 
 // Undefined
@@ -504,6 +505,7 @@ void ud() {
 // Одна инструкция
 void step() {
 
+    int8_t   offset;
     uint8_t  cont = 0;
     uint8_t  tempc = flags & C_FLAG;
     uint16_t tempw;
@@ -514,9 +516,7 @@ void step() {
 
     do {
 
-        opcode = FETCH();
-
-        switch (opcode) {
+        switch (opcode = FETCH()) {
 
             // ADD
             case 0x00: fetchea(); seteab(setadd8 (geteab(), getr8 (cpu_reg))); break;
@@ -630,7 +630,39 @@ void step() {
                 break;
             }
 
-            // 70-7f Условные переходы
+            // JO, JNO
+            case 0x70: offset = (int8_t)FETCH(); if   (flags&V_FLAG)  ip += offset; break;
+            case 0x71: offset = (int8_t)FETCH(); if (!(flags&V_FLAG)) ip += offset; break;
+
+            // JB, JNB
+            case 0x72: offset = (int8_t)FETCH(); if   (flags&C_FLAG)  ip += offset; break;
+            case 0x73: offset = (int8_t)FETCH(); if (!(flags&C_FLAG)) ip += offset; break;
+
+            // JZ, JNZ
+            case 0x74: offset = (int8_t)FETCH(); if   (flags&Z_FLAG)  ip += offset; break;
+            case 0x75: offset = (int8_t)FETCH(); if (!(flags&Z_FLAG)) ip += offset; break;
+
+            // JBE, JNBE
+            case 0x76: offset = (int8_t)FETCH(); if   (flags&(C_FLAG|Z_FLAG))  ip += offset; break;
+            case 0x77: offset = (int8_t)FETCH(); if (!(flags&(C_FLAG|Z_FLAG))) ip += offset; break;
+
+            // JS, JNS
+            case 0x78: offset = (int8_t)FETCH(); if   (flags&N_FLAG)  ip += offset; break;
+            case 0x79: offset = (int8_t)FETCH(); if (!(flags&N_FLAG)) ip += offset; break;
+
+            // JP, JNP
+            case 0x7A: offset = (int8_t)FETCH(); if   (flags&P_FLAG)  ip += offset; break;
+            case 0x7B: offset = (int8_t)FETCH(); if (!(flags&P_FLAG)) ip += offset; break;
+
+            // JL, JNL
+            case 0x7C: offset = (int8_t)FETCH(); if (!!(flags&N_FLAG) != !!(flags&V_FLAG)) ip += offset; break;
+            case 0x7D: offset = (int8_t)FETCH(); if (!!(flags&N_FLAG) == !!(flags&V_FLAG)) ip += offset; break;
+
+            // JLE, JNLE: ZF=1 OR (SF!=OF); ZF=0 AND (SF=OF)
+            case 0x7E: offset = (int8_t)FETCH(); if ( (flags&Z_FLAG) ||  !!(flags&N_FLAG) != !!(flags&V_FLAG))  ip += offset; break;
+            case 0x7F: offset = (int8_t)FETCH(); if (!(flags&Z_FLAG) && (!!(flags&N_FLAG) == !!(flags&V_FLAG))) ip += offset; break;
+
+            // 80-87
 
             // MOV modrm
             case 0x88: fetchea(); seteab(getr8 (cpu_reg)); break;
@@ -638,12 +670,27 @@ void step() {
             case 0x8A: fetchea(); setr8 (cpu_reg, geteab()); break;
             case 0x8B: fetchea(); setr16(cpu_reg, geteaw()); break;
 
+            // MOV w, sreg
+            case 0x8C: {
+
+                fetchea();
+                switch (rmdat & 0x38) {
+                    case 0x00: seteaw(segs[SEG_ES]); break;
+                    case 0x08: seteaw(segs[SEG_CS]); break;
+                    case 0x10: seteaw(segs[SEG_SS]); break;
+                    case 0x18: seteaw(segs[SEG_DS]); break;
+                }
+                break;
+            }
+
+            // LEA r16, ea
+            case 0x8D: fetchea(); regs[cpu_reg] = eaaddr; break;
+
             // MOV sreg, r16
             case 0x8E: {
 
                 fetchea();
-                switch (rmdat & 0x38)
-                {
+                switch (rmdat & 0x38) {
                     case 0x00: loades(geteaw()); break;
                     case 0x08: ud(); break;
                     case 0x10: loadss(geteaw()); break;
@@ -651,6 +698,9 @@ void step() {
                 }
                 break;
             }
+
+            // POP rm
+            case 0x8F: fetchea(); seteaw(pop()); break;
 
             // XCHG ax, r16
             case 0x90: case 0x91: case 0x92: case 0x93:
@@ -661,6 +711,15 @@ void step() {
                 regs[REG_AX] = tempw;
                 break;
             }
+
+            // CBW, CWD
+            case 0x98: regs[REG_AX] = (regs[REG_AL] & 0x0080  ? 0xff00 : 0) | (regs[REG_AL] & 0xff);
+            case 0x99: regs[REG_DX] = (regs[REG_AX] & 0x8000) ? 0xffff : 0;
+
+            // 9a-af
+
+            // FWAIT
+            case 0x9b: break;
 
             // MOV r8, #8
             case 0xb0: case 0xb1: case 0xb2: case 0xb3:
@@ -678,11 +737,42 @@ void step() {
                 break;
             }
 
-            default:
+            // LOOPNZ
+            case 0xE0: {
 
-                // Undefined Opcode
+                offset = (int8_t) FETCH(); regs[REG_CX]--;
+                if (regs[REG_CX] && !(flags & Z_FLAG)) ip += offset;
                 break;
+            }
 
+            // LOOPZ
+            case 0xE1: {
+
+                offset = (int8_t) FETCH(); regs[REG_CX]--;
+                if (regs[REG_CX] &&  (flags & Z_FLAG)) ip += offset;
+                break;
+            }
+
+            // LOOP
+            case 0xE2: {
+
+                offset = (int8_t) FETCH(); regs[REG_CX]--;
+                if (regs[REG_CX]) ip += offset;
+                break;
+            }
+
+            // JCXZ
+            case 0xE3: {
+
+                offset = (int8_t) FETCH();
+                if (regs[REG_CX] == 0) ip += offset;
+                break;
+            }
+
+            // HLT
+            case 0xF4: inhlt = 1; ip--; break;
+
+            default: ud(); break;
         }
     }
     while (cont);

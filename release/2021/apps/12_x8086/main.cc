@@ -17,7 +17,7 @@ int main() {
     initcpu();
 
     // Выполнить N инструкции
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 8001; i++) {
         step();
     }
 

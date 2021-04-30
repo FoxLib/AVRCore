@@ -3,7 +3,11 @@
 
             mov     ax, $b800
             mov     ds, ax
-            mov     ax, $1700
-            mov     [bx], ax
+            mov     ax, $2700
+            mov     cx, 2000
+@@:         mov     [bx], ax
+            inc     bx
+            inc     bx
+            loop    @b
 
             hlt

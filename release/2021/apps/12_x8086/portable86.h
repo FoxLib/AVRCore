@@ -41,7 +41,7 @@ enum Prefixes {
 
 };
 
-uint8_t  opcode, rmdat, cpu_reg, cpu_mod, cpu_rm;
+uint8_t  opcode, rmdat, cpu_reg, cpu_mod, cpu_rm, inhlt;
 uint8_t  sel_seg, rep;
 uint16_t eaaddr;
 uint32_t segment;
