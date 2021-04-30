@@ -1,6 +1,9 @@
 
             org     0000h               ; F000:0000
 
-            mov     bp, $3234
-            add     al, ah
+            mov     ax, $b800
+            mov     ds, ax
+            mov     ax, $1700
+            mov     [bx], ax
+
             hlt

@@ -16,7 +16,10 @@ int main() {
     D.cls(7);
     initcpu();
 
-    step();
+    // Выполнить N инструкции
+    for (int i = 0; i < 5; i++) {
+        step();
+    }
 
     dumpregs();
 

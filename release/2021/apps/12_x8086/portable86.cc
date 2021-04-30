@@ -64,7 +64,7 @@ uint8_t setadc8(uint8_t a, uint8_t b, uint8_t tempc)
     return c;
 }
 
-uint8_t setadd16(uint16_t a, uint16_t b)
+uint16_t setadd16(uint16_t a, uint16_t b)
 {
     uint32_t c = (uint32_t)a + (uint32_t)b;
 
@@ -497,11 +497,16 @@ void initcpu() {
     ip = 0x0000;
 }
 
+// Undefined
+void ud() {
+}
+
 // Одна инструкция
 void step() {
 
     uint8_t  cont = 0;
     uint8_t  tempc = flags & C_FLAG;
+    uint16_t tempw;
 
     rep     = 0;
     sel_seg = 0;
@@ -515,7 +520,7 @@ void step() {
 
             // ADD
             case 0x00: fetchea(); seteab(setadd8 (geteab(), getr8 (cpu_reg))); break;
-            case 0x01: fetchea(); seteab(setadd16(geteaw(), getr16(cpu_reg))); break;
+            case 0x01: fetchea(); seteaw(setadd16(geteaw(), getr16(cpu_reg))); break;
             case 0x02: fetchea(); setr8 (cpu_reg, setadd8 (getr8 (cpu_reg), geteab())); break;
             case 0x03: fetchea(); setr16(cpu_reg, setadd16(getr16(cpu_reg), geteaw())); break;
             case 0x04: setr8 (REG_AL, setadd8 (regs[REG_AL], FETCH())); break;
@@ -525,7 +530,7 @@ void step() {
 
             // OR
             case 0x08: fetchea(); seteab(setor8 (geteab(), getr8 (cpu_reg))); break;
-            case 0x09: fetchea(); seteab(setor16(geteaw(), getr16(cpu_reg))); break;
+            case 0x09: fetchea(); seteaw(setor16(geteaw(), getr16(cpu_reg))); break;
             case 0x0A: fetchea(); setr8 (cpu_reg, setor8 (getr8 (cpu_reg), geteab())); break;
             case 0x0B: fetchea(); setr16(cpu_reg, setor16(getr16(cpu_reg), geteaw())); break;
             case 0x0C: setr8 (REG_AL, setor8 (regs[REG_AL], FETCH())); break;
@@ -535,7 +540,7 @@ void step() {
 
             // ADС
             case 0x10: fetchea(); seteab(setadc8 (geteab(), getr8 (cpu_reg), tempc)); break;
-            case 0x11: fetchea(); seteab(setadc16(geteaw(), getr16(cpu_reg), tempc)); break;
+            case 0x11: fetchea(); seteaw(setadc16(geteaw(), getr16(cpu_reg), tempc)); break;
             case 0x12: fetchea(); setr8 (cpu_reg, setadc8 (getr8 (cpu_reg), geteab(), tempc)); break;
             case 0x13: fetchea(); setr16(cpu_reg, setadc16(getr16(cpu_reg), geteaw(), tempc)); break;
             case 0x14: setr8 (REG_AL, setadc8 (regs[REG_AL], FETCH(), tempc)); break;
@@ -545,7 +550,7 @@ void step() {
 
             // SBB
             case 0x18: fetchea(); seteab(setsbc8 (geteab(), getr8 (cpu_reg), tempc)); break;
-            case 0x19: fetchea(); seteab(setsbc16(geteaw(), getr16(cpu_reg), tempc)); break;
+            case 0x19: fetchea(); seteaw(setsbc16(geteaw(), getr16(cpu_reg), tempc)); break;
             case 0x1A: fetchea(); setr8 (cpu_reg, setsbc8 (getr8 (cpu_reg), geteab(), tempc)); break;
             case 0x1B: fetchea(); setr16(cpu_reg, setsbc16(getr16(cpu_reg), geteaw(), tempc)); break;
             case 0x1C: setr8 (REG_AL, setsbc8 (regs[REG_AL], FETCH(), tempc)); break;
@@ -555,7 +560,7 @@ void step() {
 
             // AND
             case 0x20: fetchea(); seteab(setand8 (geteab(), getr8 (cpu_reg))); break;
-            case 0x21: fetchea(); seteab(setand16(geteaw(), getr16(cpu_reg))); break;
+            case 0x21: fetchea(); seteaw(setand16(geteaw(), getr16(cpu_reg))); break;
             case 0x22: fetchea(); setr8 (cpu_reg, setand8 (getr8 (cpu_reg), geteab())); break;
             case 0x23: fetchea(); setr16(cpu_reg, setand16(getr16(cpu_reg), geteaw())); break;
             case 0x24: setr8 (REG_AL, setand8 (regs[REG_AL], FETCH())); break;
@@ -565,7 +570,7 @@ void step() {
 
             // SUB
             case 0x28: fetchea(); seteab(setsub8 (geteab(), getr8 (cpu_reg))); break;
-            case 0x29: fetchea(); seteab(setsub16(geteaw(), getr16(cpu_reg))); break;
+            case 0x29: fetchea(); seteaw(setsub16(geteaw(), getr16(cpu_reg))); break;
             case 0x2A: fetchea(); setr8 (cpu_reg, setsub8 (getr8 (cpu_reg), geteab())); break;
             case 0x2B: fetchea(); setr16(cpu_reg, setsub16(getr16(cpu_reg), geteaw())); break;
             case 0x2C: setr8 (REG_AL, setsub8 (regs[REG_AL], FETCH())); break;
@@ -575,7 +580,7 @@ void step() {
 
             // XOR
             case 0x30: fetchea(); seteab(setxor8 (geteab(), getr8 (cpu_reg))); break;
-            case 0x31: fetchea(); seteab(setxor16(geteaw(), getr16(cpu_reg))); break;
+            case 0x31: fetchea(); seteaw(setxor16(geteaw(), getr16(cpu_reg))); break;
             case 0x32: fetchea(); setr8 (cpu_reg, setxor8 (getr8 (cpu_reg), geteab())); break;
             case 0x33: fetchea(); setr16(cpu_reg, setxor16(getr16(cpu_reg), geteaw())); break;
             case 0x34: setr8 (REG_AL, setxor8 (regs[REG_AL], FETCH())); break;
@@ -595,47 +600,83 @@ void step() {
 
             // INC r16
             case 0x40: case 0x41: case 0x42: case 0x43:
-            case 0x44: case 0x45: case 0x46: case 0x47:
+            case 0x44: case 0x45: case 0x46: case 0x47: {
 
                 regs[opcode&7] = setadd16nc(regs[opcode&7], 1);
                 break;
+            }
 
             // DEC r16
             case 0x48: case 0x49: case 0x4A: case 0x4B:
-            case 0x4C: case 0x4D: case 0x4E: case 0x4F:
+            case 0x4C: case 0x4D: case 0x4E: case 0x4F: {
 
                 regs[opcode&7] = setsub16nc(regs[opcode&7], 1);
                 break;
+            }
 
             // PUSH r16
             case 0x50: case 0x51: case 0x52: case 0x53:
-            case 0x54: case 0x55: case 0x56: case 0x57:
+            case 0x54: case 0x55: case 0x56: case 0x57: {
 
                 push(regs[opcode&7]);
                 break;
+            }
 
             // POP r16
             case 0x58: case 0x59: case 0x5A: case 0x5B:
-            case 0x5C: case 0x5D: case 0x5E: case 0x5F:
+            case 0x5C: case 0x5D: case 0x5E: case 0x5F: {
 
                 regs[opcode&7] = pop();
                 break;
+            }
 
             // 70-7f Условные переходы
 
+            // MOV modrm
+            case 0x88: fetchea(); seteab(getr8 (cpu_reg)); break;
+            case 0x89: fetchea(); seteaw(getr16(cpu_reg)); break;
+            case 0x8A: fetchea(); setr8 (cpu_reg, geteab()); break;
+            case 0x8B: fetchea(); setr16(cpu_reg, geteaw()); break;
+
+            // MOV sreg, r16
+            case 0x8E: {
+
+                fetchea();
+                switch (rmdat & 0x38)
+                {
+                    case 0x00: loades(geteaw()); break;
+                    case 0x08: ud(); break;
+                    case 0x10: loadss(geteaw()); break;
+                    case 0x18: loadds(geteaw()); break;
+                }
+                break;
+            }
+
+            // XCHG ax, r16
+            case 0x90: case 0x91: case 0x92: case 0x93:
+            case 0x94: case 0x95: case 0x96: case 0x97: {
+
+                tempw = regs[opcode&7];
+                regs[opcode&7] = regs[REG_AX];
+                regs[REG_AX] = tempw;
+                break;
+            }
+
             // MOV r8, #8
             case 0xb0: case 0xb1: case 0xb2: case 0xb3:
-            case 0xb4: case 0xb5: case 0xb6: case 0xb7:
+            case 0xb4: case 0xb5: case 0xb6: case 0xb7: {
 
                 setr8(opcode&7, FETCH());
                 break;
+            }
 
             // MOV r16, #16
             case 0xb8: case 0xb9: case 0xba: case 0xbb:
-            case 0xbc: case 0xbd: case 0xbe: case 0xbf:
+            case 0xbc: case 0xbd: case 0xbe: case 0xbf: {
 
                 regs[opcode&7] = getword();
                 break;
+            }
 
             default:
 

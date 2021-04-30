@@ -16,14 +16,14 @@ enum FlagBit
 
 enum RegsALL {
 
-    REG_AX  = 0,    REG_AL = 0,
-    REG_CX  = 1,    REG_CL = 1,
-    REG_DX  = 2,    REG_DL = 2,
-    REG_BX  = 3,    REG_BL = 3,
-    REG_SP  = 4,    REG_AH = 4,
-    REG_BP  = 5,    REG_CH = 5,
-    REG_SI  = 6,    REG_DH = 6,
-    REG_DI  = 7,    REG_BH = 7,
+    REG_AX = 0, REG_AL = 0,
+    REG_CX = 1, REG_CL = 1,
+    REG_DX = 2, REG_DL = 2,
+    REG_BX = 3, REG_BL = 3,
+    REG_SP = 4, REG_AH = 4,
+    REG_BP = 5, REG_CH = 5,
+    REG_SI = 6, REG_DH = 6,
+    REG_DI = 7, REG_BH = 7,
 };
 
 enum SegID {
