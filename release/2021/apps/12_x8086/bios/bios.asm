@@ -5,7 +5,7 @@
             mov     ds, ax
             mov     ax, $3061
             mov     cx, 2000
-@@:         mov     [bx], ax
+@@:         mov     word [bx],ax
             inc     bx
             inc     bx
             loop    @b

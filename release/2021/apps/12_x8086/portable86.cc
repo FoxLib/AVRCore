@@ -277,10 +277,14 @@ void loades(uint16_t s) { segs[SEG_ES] = s; seg_es = (uint32_t)s << 4; }
 void loadds(uint16_t s) { segs[SEG_DS] = s; seg_ds = (uint32_t)s << 4; }
 
 // Считывание следующего кода из CS:IP
-uint8_t FETCH() { return readmemb(seg_cs + (ip++)); }
+inline uint8_t FETCH() { return readmemb(seg_cs + (ip++)); }
 
 // Считывание WORD из потока CS:IP
-uint16_t getword() { uint8_t l = FETCH(); return ((uint16_t)FETCH() << 8) | l; }
+uint16_t getword() {
+
+    uint8_t l = FETCH();
+    return ((uint16_t)FETCH() << 8) | l;
+}
 
 // Прочитать эффективный адрес
 void fetchea() {
@@ -470,6 +474,52 @@ void aas() {
     setr16(REG_AX, (AL&15) + ((uint16_t)AH<<8));
 }
 
+// Дальний вызов
+void callfar(uint16_t _cs, uint16_t _ip) {
+
+    uint16_t cs_ = segs[SEG_CS], ip_ = ip;
+    ip = _ip;
+    loadcs(_cs);
+    push(cs_);
+    push(ip_);
+}
+
+// Групповые операции АЛУ 8 бит
+uint8_t groupalu8(uint8_t mode, uint8_t a, uint8_t b) {
+
+    switch (mode) {
+
+        case 0: return setadd8(a, b);
+        case 1: return setor8 (a, b);
+        case 2: return setadc8(a, b, flags & C_FLAG);
+        case 3: return setsbc8(a, b, flags & C_FLAG);
+        case 4: return setand8(a, b);
+        case 5:
+        case 7: return setsub8(a, b);
+        case 6: return setxor8(a, b);
+    }
+
+    return 0;
+}
+
+// Групповые операции АЛУ 16 бит
+uint16_t groupalu16(uint8_t mode, uint16_t a, uint16_t b) {
+
+    switch (mode) {
+
+        case 0: return setadd16(a, b);
+        case 1: return setor16 (a, b);
+        case 2: return setadc16(a, b, flags & C_FLAG);
+        case 3: return setsbc16(a, b, flags & C_FLAG);
+        case 4: return setand16(a, b);
+        case 5:
+        case 7: return setsub16(a, b);
+        case 6: return setxor16(a, b);
+    }
+
+    return 0;
+}
+
 // ---------------------------------------------------------------------
 // ЦИКЛ ВЫПОЛНЕНИЯ ОДНОЙ ИНСТРУКЦИИ
 // ---------------------------------------------------------------------
@@ -506,7 +556,7 @@ void ud() {
 void step() {
 
     int8_t   offset;
-    uint8_t  cont = 0;
+    uint8_t  tempb, cont = 0;
     uint8_t  tempc = flags & C_FLAG;
     uint16_t tempw;
 
@@ -630,6 +680,8 @@ void step() {
                 break;
             }
 
+            // 60-6F <Undefined-8086>
+
             // JO, JNO
             case 0x70: offset = (int8_t)FETCH(); if   (flags&V_FLAG)  ip += offset; break;
             case 0x71: offset = (int8_t)FETCH(); if (!(flags&V_FLAG)) ip += offset; break;
@@ -662,7 +714,45 @@ void step() {
             case 0x7E: offset = (int8_t)FETCH(); if ( (flags&Z_FLAG) ||  !!(flags&N_FLAG) != !!(flags&V_FLAG))  ip += offset; break;
             case 0x7F: offset = (int8_t)FETCH(); if (!(flags&Z_FLAG) && (!!(flags&N_FLAG) == !!(flags&V_FLAG))) ip += offset; break;
 
-            // 80-87
+            // GRP#1 e,#8
+            case 0x80:
+            case 0x82: {
+
+                fetchea();
+                tempb = geteab();
+                tempb = groupalu8(cpu_reg, tempb, FETCH());
+                if (cpu_reg < 7) seteab(tempb);
+                break;
+            }
+
+            // GRP#1 e,#16
+            case 0x81: {
+
+                fetchea();
+                tempw = geteaw();
+                tempw = groupalu16(cpu_reg, tempw, getword());
+                if (cpu_reg < 7) seteaw(tempw);
+                break;
+            }
+
+            // GRP#1 e16,#8
+            case 0x83: {
+
+                fetchea();
+                tempw = geteaw();
+                tempb = FETCH();
+                tempw = groupalu16(cpu_reg, tempw, tempb | (tempb&0x80 ? 0xFF00 : 0));
+                if (cpu_reg < 7) seteaw(tempw);
+                break;
+            }
+
+            // TEST 8/16,r
+            case 0x84: fetchea(); setand8 (geteab(), getr8 (cpu_reg)); break;
+            case 0x85: fetchea(); setand16(geteaw(), getr16(cpu_reg)); break;
+
+            // XCHG 8/16,r
+            case 0x86: fetchea(); tempb = geteab(); seteab(getr8 (cpu_reg)); setr8 (cpu_reg, tempb); break;
+            case 0x87: fetchea(); tempw = geteaw(); seteaw(getr16(cpu_reg)); setr16(cpu_reg, tempw); break;
 
             // MOV modrm
             case 0x88: fetchea(); seteab(getr8 (cpu_reg)); break;
@@ -716,22 +806,31 @@ void step() {
             case 0x98: AX_ = (AX_ & 0x0080  ? 0xff00 : 0) | (AX_ & 0xff);
             case 0x99: DX_ = (AX_ & 0x8000) ? 0xffff : 0;
 
-            // 9a-af
+            // CALL cs:ip
+            case 0x9A: tempw = getword(); callfar(getword(), tempw); break;
+            case 0x9B: /* FWAIT */ break;
 
-            // FWAIT
-            case 0x9b: break;
+            // PUSHF/POPF
+            case 0x9C: push(flags|0xF000); break;
+            case 0x9D: flags = pop() & 0xfff; break;
+
+            // SAHF, LAHF
+            case 0x9E: flags = (flags & 0xFF00) | (AX_ >> 8); break;
+            case 0x9F: setr8(REG_AH, flags); break;
+
+            // @TODO A0..AF
 
             // MOV r8, #8
-            case 0xb0: case 0xb1: case 0xb2: case 0xb3:
-            case 0xb4: case 0xb5: case 0xb6: case 0xb7: {
+            case 0xB0: case 0xB1: case 0xB2: case 0xB3:
+            case 0xB4: case 0xB5: case 0xB6: case 0xB7: {
 
                 setr8(opcode&7, FETCH());
                 break;
             }
 
             // MOV r16, #16
-            case 0xb8: case 0xb9: case 0xba: case 0xbb:
-            case 0xbc: case 0xbd: case 0xbe: case 0xbf: {
+            case 0xB8: case 0xB9: case 0xBA: case 0xBB:
+            case 0xBC: case 0xBD: case 0xBE: case 0xBF: {
 
                 regs[opcode&7] = getword();
                 break;
