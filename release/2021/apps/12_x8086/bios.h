@@ -1,0 +1,1 @@
+const byte BIOS[] PROGMEM = {0x00, 0xe0, 0xf4};
