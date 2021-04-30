@@ -3,7 +3,7 @@
 
             mov     ax, $b800
             mov     ds, ax
-            mov     ax, $2700
+            mov     ax, $3061
             mov     cx, 2000
 @@:         mov     [bx], ax
             inc     bx

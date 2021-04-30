@@ -1,3 +1,11 @@
+#define AX_ regs[0]
+#define CX_ regs[1]
+#define DX_ regs[2]
+#define BX_ regs[3]
+#define SP_ regs[4]
+#define BP_ regs[5]
+#define SI_ regs[6]
+#define DI_ regs[7]
 
 uint16_t flags;
 

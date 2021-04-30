@@ -713,8 +713,8 @@ void step() {
             }
 
             // CBW, CWD
-            case 0x98: regs[REG_AX] = (regs[REG_AL] & 0x0080  ? 0xff00 : 0) | (regs[REG_AL] & 0xff);
-            case 0x99: regs[REG_DX] = (regs[REG_AX] & 0x8000) ? 0xffff : 0;
+            case 0x98: AX_ = (AX_ & 0x0080  ? 0xff00 : 0) | (AX_ & 0xff);
+            case 0x99: DX_ = (AX_ & 0x8000) ? 0xffff : 0;
 
             // 9a-af
 
@@ -737,37 +737,11 @@ void step() {
                 break;
             }
 
-            // LOOPNZ
-            case 0xE0: {
-
-                offset = (int8_t) FETCH(); regs[REG_CX]--;
-                if (regs[REG_CX] && !(flags & Z_FLAG)) ip += offset;
-                break;
-            }
-
-            // LOOPZ
-            case 0xE1: {
-
-                offset = (int8_t) FETCH(); regs[REG_CX]--;
-                if (regs[REG_CX] &&  (flags & Z_FLAG)) ip += offset;
-                break;
-            }
-
-            // LOOP
-            case 0xE2: {
-
-                offset = (int8_t) FETCH(); regs[REG_CX]--;
-                if (regs[REG_CX]) ip += offset;
-                break;
-            }
-
-            // JCXZ
-            case 0xE3: {
-
-                offset = (int8_t) FETCH();
-                if (regs[REG_CX] == 0) ip += offset;
-                break;
-            }
+            // LOOP[NZ|Z] JCXZ
+            case 0xE0: offset = (int8_t) FETCH(); CX_--; if ( CX_ && !(flags & Z_FLAG)) ip += offset; break;
+            case 0xE1: offset = (int8_t) FETCH(); CX_--; if ( CX_ &&  (flags & Z_FLAG)) ip += offset; break;
+            case 0xE2: offset = (int8_t) FETCH(); CX_--; if ( CX_) ip += offset; break;
+            case 0xE3: offset = (int8_t) FETCH();        if (!CX_) ip += offset; break;
 
             // HLT
             case 0xF4: inhlt = 1; ip--; break;
