@@ -2,13 +2,13 @@
 #include <screen3.cc>
 #include <dram.cc>
 
-// Текстовый видеорежим
 screen3 D;
 dram    M;
 
 #include "bios.h"
 #include "iface.cc"
 #include "portable86.cc"
+#include "debug.cc"
 
 int main() {
 
@@ -17,6 +17,8 @@ int main() {
     initcpu();
 
     step();
+
+    dumpregs();
 
     for (;;);
 }

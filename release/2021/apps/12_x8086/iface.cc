@@ -29,3 +29,4 @@ void writememb(uint32_t a, uint8_t v) {
 
     M.poke(a, v);
 }
+

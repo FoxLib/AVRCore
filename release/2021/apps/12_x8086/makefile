@@ -17,6 +17,5 @@ all:
 	rm main.elf
 	$(MIF) main.bin > ../../machine/de0/memflash.mif
 	$(AVR) main.bin
-
 clean:
 	rm -f *.o rm *.elf *.lst *.bin *.map

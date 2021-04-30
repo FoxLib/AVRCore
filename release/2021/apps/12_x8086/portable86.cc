@@ -271,16 +271,16 @@ void writememw(uint32_t s, uint16_t a, uint16_t v) {
 }
 
 // Загрузка нового значения CS
-void loadcs(uint16_t s) { segs[SEG_CS] = s; seg_cs = s << 4; }
-void loadss(uint16_t s) { segs[SEG_SS] = s; seg_ss = s << 4; }
-void loades(uint16_t s) { segs[SEG_ES] = s; seg_es = s << 4; }
-void loadds(uint16_t s) { segs[SEG_DS] = s; seg_ds = s << 4; }
+void loadcs(uint16_t s) { segs[SEG_CS] = s; seg_cs = (uint32_t)s << 4; }
+void loadss(uint16_t s) { segs[SEG_SS] = s; seg_ss = (uint32_t)s << 4; }
+void loades(uint16_t s) { segs[SEG_ES] = s; seg_es = (uint32_t)s << 4; }
+void loadds(uint16_t s) { segs[SEG_DS] = s; seg_ds = (uint32_t)s << 4; }
 
 // Считывание следующего кода из CS:IP
 uint8_t FETCH() { return readmemb(seg_cs + (ip++)); }
 
 // Считывание WORD из потока CS:IP
-uint16_t getword() { uint8_t l = FETCH(); return (FETCH() << 8) | l; }
+uint16_t getword() { uint8_t l = FETCH(); return ((uint16_t)FETCH() << 8) | l; }
 
 // Прочитать эффективный адрес
 void fetchea() {
@@ -325,7 +325,7 @@ uint8_t getr8(uint8_t id) { return id & 4 ? regs[id&3] >> 8 : regs[id&3]; }
 void setr8(uint8_t id, uint8_t v) {
 
     if (id & 4) {
-        regs[id&3] = (regs[id&3] & 0x00ff) | (v << 8);
+        regs[id&3] = (regs[id&3] & 0x00ff) | ((uint16_t)v << 8);
     } else {
         regs[id&3] = (regs[id&3] & 0xff00) | v;
     }
@@ -418,7 +418,7 @@ void das() {
 
     if ((flags & A_FLAG) || ((AL & 0xF)>9))
     {
-        tempi = ((uint16_t)AL)-6;
+        tempi = ((uint16_t)AL) - 6;
         AL -= 6;
         flags |= A_FLAG;
         if (tempi & 0x100) flags |= C_FLAG;
@@ -449,7 +449,7 @@ void aaa() {
     else
        flags &= ~(A_FLAG|C_FLAG);
 
-    setr16(REG_AX, (AL&15) + (AH<<8));
+    setr16(REG_AX, (AL&15) + ((uint16_t)AH << 8));
 }
 
 // ASCII-коррекция после вычитания
@@ -458,18 +458,17 @@ void aas() {
     uint8_t  AL = regs[REG_AL];
     uint8_t  AH = regs[REG_AX] >> 8;
 
-    if ((flags&A_FLAG)||((AL&0xF)>9))
+    if ((flags & A_FLAG) || ((AL & 0xF) > 9))
     {
-        AL -= 6;
+        AL-=6;
         AH--;
         flags |= (A_FLAG|C_FLAG);
     }
     else
        flags &= ~(A_FLAG|C_FLAG);
 
-    setr16(REG_AX, (AL&15) + (AH<<8));
+    setr16(REG_AX, (AL&15) + ((uint16_t)AH<<8));
 }
-
 
 // ---------------------------------------------------------------------
 // ЦИКЛ ВЫПОЛНЕНИЯ ОДНОЙ ИНСТРУКЦИИ
@@ -509,6 +508,8 @@ void step() {
     segment = seg_ds;
 
     do {
+
+        opcode = FETCH();
 
         switch (opcode) {
 
@@ -591,6 +592,55 @@ void step() {
             case 0x3D: setsub16(regs[REG_AX], FETCH()); break;
             case 0x3E: sel_seg = 1; segment = seg_ds; cont = 1; break;
             case 0x3F: aas(); break;
+
+            // INC r16
+            case 0x40: case 0x41: case 0x42: case 0x43:
+            case 0x44: case 0x45: case 0x46: case 0x47:
+
+                regs[opcode&7] = setadd16nc(regs[opcode&7], 1);
+                break;
+
+            // DEC r16
+            case 0x48: case 0x49: case 0x4A: case 0x4B:
+            case 0x4C: case 0x4D: case 0x4E: case 0x4F:
+
+                regs[opcode&7] = setsub16nc(regs[opcode&7], 1);
+                break;
+
+            // PUSH r16
+            case 0x50: case 0x51: case 0x52: case 0x53:
+            case 0x54: case 0x55: case 0x56: case 0x57:
+
+                push(regs[opcode&7]);
+                break;
+
+            // POP r16
+            case 0x58: case 0x59: case 0x5A: case 0x5B:
+            case 0x5C: case 0x5D: case 0x5E: case 0x5F:
+
+                regs[opcode&7] = pop();
+                break;
+
+            // 70-7f Условные переходы
+
+            // MOV r8, #8
+            case 0xb0: case 0xb1: case 0xb2: case 0xb3:
+            case 0xb4: case 0xb5: case 0xb6: case 0xb7:
+
+                setr8(opcode&7, FETCH());
+                break;
+
+            // MOV r16, #16
+            case 0xb8: case 0xb9: case 0xba: case 0xbb:
+            case 0xbc: case 0xbd: case 0xbe: case 0xbf:
+
+                regs[opcode&7] = getword();
+                break;
+
+            default:
+
+                // Undefined Opcode
+                break;
 
         }
     }
