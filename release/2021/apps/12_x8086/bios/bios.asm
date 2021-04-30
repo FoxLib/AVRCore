@@ -3,9 +3,10 @@
 
             mov     ax, $b800
             mov     ds, ax
-            mov     ax, $3061
+            mov     ax, $1700
             mov     cx, 2000
 @@:         mov     word [bx],ax
+            add     al, 1
             inc     bx
             inc     bx
             loop    @b

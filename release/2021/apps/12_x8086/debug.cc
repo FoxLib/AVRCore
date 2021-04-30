@@ -17,7 +17,7 @@ void dumpregs() {
     D.print(" DS="); D.print(segs[3], 16, 2);
     D.print(" ES="); D.print(segs[0], 16, 2); D.print("\n");
     D.print(" FL="); D.print(flags, 16, 2);
-    D.print(" IP="); D.print(ip, 16, 2); D.print(" ~ ");
+    D.print(" IP="); D.print(ip, 16, 2); D.print(" ");
 
     D.print(flags & V_FLAG ? "O" : ".");
     D.print(flags & D_FLAG ? "D" : ".");

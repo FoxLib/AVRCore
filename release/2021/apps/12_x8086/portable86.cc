@@ -1,19 +1,19 @@
 #include "portable86.h"
 
 // ---------------------------------------------------------------------
-// ПРОЦЕДУРЫ-ХЕЛПЕРЫ ДЛЯ АЛУ
+// ПРОЦЕДУРЫ ДЛЯ АЛУ
 // ---------------------------------------------------------------------
 
 // Базовые флаги N,Z,P после 8-битных инструкции
-void setznp8(uint8_t val)
-{
+void setznp8(uint8_t val) {
+
     flags &= ~0xC4;
     flags |= znptable8[val];
 }
 
 // Базовые флаги N,Z,P после 16-битных инструкции
-void setznp16(uint16_t val)
-{
+void setznp16(uint16_t val) {
+
     flags &= ~0xC4;
 
     if (val & 0x8000) flags |= N_FLAG;
@@ -21,9 +21,8 @@ void setznp16(uint16_t val)
     flags |= (znptable8[val&0xff] & P_FLAG);
 }
 
-// Изменение флагов после ADD-8
-uint8_t setadd8(uint8_t a, uint8_t b)
-{
+uint8_t setadd8(uint8_t a, uint8_t b) {
+
     uint16_t c = (uint16_t)a + (uint16_t)b;
 
     flags &= ~0x8D5;
@@ -36,9 +35,8 @@ uint8_t setadd8(uint8_t a, uint8_t b)
     return c;
 }
 
-// Изменение флагов после ADD-8 без переноса CF
-uint8_t setadd8nc(uint8_t a, uint8_t b)
-{
+uint8_t setadd8nc(uint8_t a, uint8_t b) {
+
     uint16_t c = (uint16_t)a + (uint16_t)b;
 
     flags &= ~0x8D4;
@@ -50,8 +48,8 @@ uint8_t setadd8nc(uint8_t a, uint8_t b)
     return c;
 }
 
-uint8_t setadc8(uint8_t a, uint8_t b, uint8_t tempc)
-{
+uint8_t setadc8(uint8_t a, uint8_t b, uint8_t tempc) {
+
     uint16_t c = (uint16_t)a + (uint16_t)b + tempc;
 
     flags &= ~0x8D5;
@@ -64,8 +62,8 @@ uint8_t setadc8(uint8_t a, uint8_t b, uint8_t tempc)
     return c;
 }
 
-uint16_t setadd16(uint16_t a, uint16_t b)
-{
+uint16_t setadd16(uint16_t a, uint16_t b) {
+
     uint32_t c = (uint32_t)a + (uint32_t)b;
 
     flags &= ~0x8D5;
@@ -78,8 +76,8 @@ uint16_t setadd16(uint16_t a, uint16_t b)
     return c;
 }
 
-uint16_t setadd16nc(uint16_t a, uint16_t b)
-{
+uint16_t setadd16nc(uint16_t a, uint16_t b) {
+
     uint32_t c = (uint32_t)a + (uint32_t)b;
 
     flags &= ~0x8D4;
@@ -91,8 +89,8 @@ uint16_t setadd16nc(uint16_t a, uint16_t b)
     return c;
 }
 
-uint16_t setadc16(uint16_t a, uint16_t b, uint8_t tempc)
-{
+uint16_t setadc16(uint16_t a, uint16_t b, uint8_t tempc) {
+
     uint32_t c = (uint32_t)a + (uint32_t)b + tempc;
 
     flags &= ~0x8D5;
@@ -105,8 +103,8 @@ uint16_t setadc16(uint16_t a, uint16_t b, uint8_t tempc)
     return c;
 }
 
-uint8_t setsub8(uint8_t a, uint8_t b)
-{
+uint8_t setsub8(uint8_t a, uint8_t b) {
+
     uint16_t c = (uint16_t)a - (uint16_t)b;
 
     flags &= ~0x8D5;
@@ -119,9 +117,9 @@ uint8_t setsub8(uint8_t a, uint8_t b)
     return c;
 }
 
-uint8_t setsub8nc(uint8_t a, uint8_t b)
-{
-    uint16_t c=(uint16_t)a-(uint16_t)b;
+uint8_t setsub8nc(uint8_t a, uint8_t b) {
+
+    uint16_t c=(uint16_t)a - (uint16_t)b;
 
     flags &= ~0x8D4;
     flags |= znptable8[c&0xFF];
@@ -132,8 +130,8 @@ uint8_t setsub8nc(uint8_t a, uint8_t b)
     return c;
 }
 
-uint8_t setsbc8(uint8_t a, uint8_t b, uint8_t tempc)
-{
+uint8_t setsbc8(uint8_t a, uint8_t b, uint8_t tempc) {
+
     uint16_t c = (uint16_t)a - (((uint16_t)b) + tempc);
 
     flags &= ~0x8D5;
@@ -146,8 +144,8 @@ uint8_t setsbc8(uint8_t a, uint8_t b, uint8_t tempc)
     return c;
 }
 
-uint16_t setsub16(uint16_t a, uint16_t b)
-{
+uint16_t setsub16(uint16_t a, uint16_t b) {
+
     uint32_t c = (uint32_t)a - (uint32_t)b;
 
     flags &= ~0x8D5;
@@ -160,9 +158,9 @@ uint16_t setsub16(uint16_t a, uint16_t b)
     return c;
 }
 
-uint16_t setsub16nc(uint16_t a, uint16_t b)
-{
-    uint32_t c=(uint32_t)a-(uint32_t)b;
+uint16_t setsub16nc(uint16_t a, uint16_t b) {
+
+    uint32_t c = (uint32_t)a - (uint32_t)b;
 
     flags &= ~0x8D4;
     setznp16(c & 0xffff);
@@ -175,8 +173,8 @@ uint16_t setsub16nc(uint16_t a, uint16_t b)
     return c;
 }
 
-uint16_t setsbc16(uint16_t a, uint16_t b, uint8_t tempc)
-{
+uint16_t setsbc16(uint16_t a, uint16_t b, uint8_t tempc) {
+
     uint32_t c = (uint32_t)a - (((uint32_t)b) + tempc);
 
     flags &= ~0x8D5;
