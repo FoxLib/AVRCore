@@ -55,7 +55,12 @@ uint16_t eaaddr;
 uint32_t segment;
 
 uint8_t  znptable8[256];    // Специальная таблица с Z,S,P
-uint16_t regs[8];
+
+// 0 AX=AH:AL | 4 SP
+// 1 CX=CH:CL | 5 BP
+// 2 DX=DH:DL | 6 SI
+// 3 BX=BH:BL | 7 DI
+uint16_t regs[8]; 
 uint16_t segs[4];
 uint32_t seg_cs, seg_ss, seg_es, seg_ds;
 uint16_t ip;

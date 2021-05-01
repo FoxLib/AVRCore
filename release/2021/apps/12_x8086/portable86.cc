@@ -288,22 +288,22 @@ uint16_t getword() {
 void fetchea() {
 
     rmdat   = FETCH();
-    cpu_reg = (rmdat >> 3) & 7;
     cpu_mod = (rmdat >> 6) & 3;
+    cpu_reg = (rmdat >> 3) & 7;
     cpu_rm  = rmdat & 7;
     eaaddr  = 0;
 
     // Расчет эффективного адреса
     switch (cpu_rm) {
 
-        case 0: eaaddr = (regs[REG_BX] + regs[REG_SI]); break;
-        case 1: eaaddr = (regs[REG_BX] + regs[REG_DI]); break;
-        case 2: eaaddr = (regs[REG_BP] + regs[REG_SI]); break;
-        case 3: eaaddr = (regs[REG_BP] + regs[REG_DI]); break;
-        case 4: eaaddr =  regs[REG_SI]; break;
-        case 5: eaaddr =  regs[REG_DI]; break;
-        case 6: eaaddr =  regs[REG_BP]; break;
-        case 7: eaaddr =  regs[REG_BX]; break;
+        case 0: eaaddr = (BX_ + SI_); break;
+        case 1: eaaddr = (BX_ + DI_); break;
+        case 2: eaaddr = (BP_ + SI_); break;
+        case 3: eaaddr = (BP_ + DI_); break;
+        case 4: eaaddr =  SI_; break;
+        case 5: eaaddr =  DI_; break;
+        case 6: eaaddr =  BP_; break;
+        case 7: eaaddr =  BX_; break;
     }
 
     // Выбор сегмента
@@ -376,15 +376,15 @@ void seteaw(uint16_t v) {
 // Запись в стек
 void push(uint16_t v) {
 
-    writememw(seg_ss, ((regs[REG_SP] - 2) & 0xffff), v);
-    regs[REG_SP] -= 2;
+    writememw(seg_ss, ((SP_ - 2) & 0xffff), v);
+    SP_ -= 2;
 }
 
 // Извлечение из стека
 uint16_t pop() {
 
-    uint16_t r = readmemw(seg_ss, regs[REG_SP]);
-    regs[REG_SP] += 2;
+    uint16_t r = readmemw(seg_ss, SP_);
+    SP_ += 2;
     return r;
 }
 
@@ -542,8 +542,14 @@ void initcpu() {
     while (c != 0);
 
     loadcs(0xf000);
-    ip = 0x0000;
-    inhlt = 0;
+    loadds(0x0000);
+    loades(0x0000);
+    loadss(0x0000);
+    
+    ip  = 0x0000;
+    SP_ = 0x0000;
+    
+	inhlt = 0;
 }
 
 // Undefined
@@ -816,7 +822,15 @@ void step() {
             case 0x9E: flags = (flags & 0xFF00) | (AX_ >> 8); break;
             case 0x9F: setr8(REG_AH, flags); break;
 
-            // @TODO A0..AF
+            // MOV acc,16
+            case 0xA0: tempw = getword(); setr8(REG_AX, readmemb(segment + tempw)); break;
+            case 0xA1: tempw = getword(); AX_ = readmemw(segment, tempw); break;
+            case 0xA2: tempw = getword(); writememb(segment + tempw, AX_); break;
+            case 0xA3: tempw = getword(); writememw(segment, tempw, AX_); break;
+            
+			// TEST al,#8
+            case 0xA8: tempb = FETCH();   setand8 (AX_, tempb); break;
+            case 0xA9: tempw = getword(); setand16(AX_, tempw); break;
 
             // MOV r8, #8
             case 0xB0: case 0xB1: case 0xB2: case 0xB3:
@@ -839,9 +853,28 @@ void step() {
             case 0xE1: offset = (int8_t) FETCH(); CX_--; if ( CX_ &&  (flags & Z_FLAG)) ip += offset; break;
             case 0xE2: offset = (int8_t) FETCH(); CX_--; if ( CX_) ip += offset; break;
             case 0xE3: offset = (int8_t) FETCH();        if (!CX_) ip += offset; break;
+            
+            // SALC
+            case 0xD6: setr8(REG_AL, flags & C_FLAG ? 0xff : 00);
+            
+            // ESC-последовательности
+            case 0xD8: case 0xD9: case 0xDA: case 0xDB:
+            case 0xDC: case 0xDD: case 0xDE: case 0xDF: {
+				
+				fetchea();
+				break;
+			}
 
             // HLT
             case 0xF4: inhlt = 1; ip--; break;
+            
+			// CLC, STC, CLI, STI
+            case 0xF8: flags &= ~C_FLAG;
+            case 0xF9: flags |=  C_FLAG;
+            case 0xFA: flags &= ~I_FLAG;
+            case 0xFB: flags |=  I_FLAG;
+            case 0xFC: flags &= ~D_FLAG;
+            case 0xFD: flags |=  D_FLAG;
 
             default: ud(); break;
         }

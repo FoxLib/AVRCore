@@ -36,7 +36,7 @@ void writememb(uint32_t a, uint8_t v) {
         return;
     }
 
-    if (a >= 0xa0000)
+    if (a >= 0xc0000)
         return;
 
     M.poke(a, v);

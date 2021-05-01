@@ -13,7 +13,8 @@ dram    M;
 int main() {
 
     D.init();
-    D.cls(7);
+    D.cls(0x07);
+    
     initcpu();
 
     // Выполнить N инструкции
