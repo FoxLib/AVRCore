@@ -1041,6 +1041,14 @@ void step() {
             case 0xD2: fetchea(); seteab(groupshift(cpu_reg, 0, geteab(), CX_&7));  break;
             case 0xD3: fetchea(); seteaw(groupshift(cpu_reg, 1, geteaw(), CX_&15)); break;
 
+            // ESC-последовательности
+            case 0xD8: case 0xD9: case 0xDA: case 0xDB:
+            case 0xDC: case 0xDD: case 0xDE: case 0xDF: {
+
+                fetchea();
+                break;
+            }
+
             // LOOP[NZ|Z] JCXZ
             case 0xE0: offset = (int8_t) getbyte(); CX_--; if ( CX_ && !(flags & Z_FLAG)) ip += offset; break;
             case 0xE1: offset = (int8_t) getbyte(); CX_--; if ( CX_ &&  (flags & Z_FLAG)) ip += offset; break;
@@ -1050,22 +1058,13 @@ void step() {
             // SALC
             case 0xD6: setr8(REG_AL, flags & C_FLAG ? 0xff : 00);
 
-            // ESC-последовательности
-            case 0xD8: case 0xD9: case 0xDA: case 0xDB:
-            case 0xDC: case 0xDD: case 0xDE: case 0xDF: {
-
-                fetchea();
-                break;
-            }
-
-            // LOCK
+            // LOCK: INT1, REP, HLT, CMC
             case 0xF0: cont = 1; break;
-
-            // INT 1
             case 0xF1: interrupt(1); break;
-
-            // HLT
+            case 0xF2: rep = REPNZ; cont = 1; break;
+            case 0xF3: rep = REPZ; cont = 1; break;
             case 0xF4: inhlt = 1; ip--; break;
+            case 0xF5: flags ^= C_FLAG; break;
 
             // CLC, STC, CLI, STI
             case 0xF8: flags &= ~C_FLAG;
