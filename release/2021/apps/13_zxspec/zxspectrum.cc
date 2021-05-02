@@ -4,6 +4,7 @@ public:
     screen13 G;
 
     word lookupfb[192];
+    word frame_counter;
     byte border_id;
     byte flash_counter, first_sta, flash_state;
 
@@ -19,6 +20,7 @@ public:
         flash_counter = 0;
         first_sta = 1;
         flash_state = 0;
+        frame_counter = 0;
     }
 
     // Интерфейс
@@ -84,6 +86,8 @@ public:
 
         // Мерцающие элементы
         flash_counter++;
+        frame_counter++;
+
         if (flash_counter >= 25 || first_sta) {
 
             flash_counter = 0;

@@ -8,5 +8,8 @@
 int main() {
 
     zxspectrum z80;
-    for (;;) z80.frame();
+
+    for (;;) {
+        z80.frame();
+    }
 }
