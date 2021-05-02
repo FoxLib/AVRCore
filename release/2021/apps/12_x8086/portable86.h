@@ -6,6 +6,14 @@
 #define BP_ regs[5]
 #define SI_ regs[6]
 #define DI_ regs[7]
+#define AL_ (regs[0]&255)
+#define CL_ (regs[1]&255)
+#define DL_ (regs[2]&255)
+#define BL_ (regs[3]&255)
+#define AH_ (regs[0]>>8)
+#define CH_ (regs[1]>>8)
+#define DH_ (regs[2]>>8)
+#define BH_ (regs[3]>>8)
 
 uint16_t flags;
 
@@ -60,7 +68,7 @@ uint8_t  znptable8[256];    // Специальная таблица с Z,S,P
 // 1 CX=CH:CL | 5 BP
 // 2 DX=DH:DL | 6 SI
 // 3 BX=BH:BL | 7 DI
-uint16_t regs[8]; 
+uint16_t regs[8];
 uint16_t segs[4];
 uint32_t seg_cs, seg_ss, seg_es, seg_ds;
 uint16_t ip;

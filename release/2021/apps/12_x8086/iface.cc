@@ -42,3 +42,9 @@ void writememb(uint32_t a, uint8_t v) {
     M.poke(a, v);
 }
 
+uint8_t ioread(uint16_t port) {
+    return 0xff;
+}
+
+void iowrite(uint16_t port, uint8_t data) {
+}

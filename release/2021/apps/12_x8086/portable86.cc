@@ -487,6 +487,23 @@ void aas() {
     setr16(REG_AX, (AL&15) + ((uint16_t)AH<<8));
 }
 
+// Коррекция после умножения
+inline void aam() {
+
+    uint8_t tb = getbyte();
+    setr8(REG_AH, AL_ / tb);
+    setr8(REG_AL, AL_ % tb);
+    setznp16(AX_);
+}
+
+// Коррекция после деления
+inline void aad() {
+
+    uint8_t tb = getbyte();
+    AX_ = (AH_*tb + AL_) & 0x00FF;
+    setznp16(AX_);
+}
+
 // Дальний вызов
 void callfar(uint16_t _cs, uint16_t _ip) {
 
@@ -1035,11 +1052,19 @@ void step() {
             case 0xCE: if (flags & V_FLAG) interrupt(4); break;
             case 0xCF: tempw = pop(); tempw2 = pop(); flags = pop() & 0xfff; loadcs(tempw2); ip = tempw; break;
 
-            // Сдвиговые групповые
+            // Сдвиговые
             case 0xD0: fetchea(); seteab(groupshift(cpu_reg, 0, geteab(), 1)); break;
             case 0xD1: fetchea(); seteaw(groupshift(cpu_reg, 1, geteaw(), 1)); break;
             case 0xD2: fetchea(); seteab(groupshift(cpu_reg, 0, geteab(), CX_&7));  break;
             case 0xD3: fetchea(); seteaw(groupshift(cpu_reg, 1, geteaw(), CX_&15)); break;
+
+            // AAM, AAD
+            case 0xD4: aam(); break;
+            case 0xD5: aad(); break;
+
+            // SALC, XLAT
+            case 0xD6: setr8(REG_AL, flags & C_FLAG ? 0xff : 00);
+            case 0xD7: setr8(REG_AL, readmemb(seg_ds + BX_ + (AX_ & 255))); break;
 
             // ESC-последовательности
             case 0xD8: case 0xD9: case 0xDA: case 0xDB:
@@ -1055,8 +1080,23 @@ void step() {
             case 0xE2: offset = (int8_t) getbyte(); CX_--; if ( CX_) ip += offset; break;
             case 0xE3: offset = (int8_t) getbyte();        if (!CX_) ip += offset; break;
 
-            // SALC
-            case 0xD6: setr8(REG_AL, flags & C_FLAG ? 0xff : 00);
+            // IN/OUT #8
+            case 0xE4: tempb = getbyte(); setr8(REG_AL, ioread(tempb)); break;
+            case 0xE5: tempb = getbyte(); setr8(REG_AL, ioread(tempb)); setr8(REG_AH, ioread(tempb+1)); break;
+            case 0xE6: tempb = getbyte(); iowrite(tempb, AL_); break;
+            case 0xE7: tempb = getbyte(); iowrite(tempb, AL_); iowrite(tempb+1, AH_); break;
+
+            // CALL, JMP #8/16
+            case 0xE8: tempw = getword(); push(ip); ip += tempw; break;
+            case 0xE9: tempw = getword(); ip += tempw; break;
+            case 0xEA: tempw = getword(); tempw2 = getword(); loadcs(tempw2); ip = tempw; break;
+            case 0xEB: offset = (int8_t)getbyte(); ip += offset; break;
+
+            // IN/OUT dx
+            case 0xEC: setr8(REG_AL, ioread(DX_)); break;
+            case 0xED: setr8(REG_AL, ioread(DX_)); setr8(REG_AH, ioread(DX_+1)); break;
+            case 0xEE: iowrite(DX_, AL_); break;
+            case 0xEF: iowrite(DX_, AL_); iowrite(DX_+1, AH_); break;
 
             // LOCK: INT1, REP, HLT, CMC
             case 0xF0: cont = 1; break;

@@ -14,7 +14,7 @@ int main() {
 
     D.init();
     D.cls(0x07);
-    
+
     initcpu();
 
     // Выполнить N инструкции

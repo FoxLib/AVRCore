@@ -1,7 +1,7 @@
 # https://gcc.gnu.org/onlinedocs/gcc/AVR-Options.html
 #DEVICE  = atmega103
 DEVICE  = atmega328
-OPTIONS = -Os -DF_CPU=25000000 -mmcu=$(DEVICE) -std=c++11
+OPTIONS = -O2 -DF_CPU=25000000 -mmcu=$(DEVICE) -std=c++11
 INCLUDE = -I../../include
 WARNING = -Wall -Wno-unused-but-set-variable
 LINKER  = -fdata-sections -Wl,--gc-sections,--defsym=__stack=0x80efff,--defsym=__heap_end=0x80efff

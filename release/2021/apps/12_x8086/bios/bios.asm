@@ -5,11 +5,14 @@
             mov     ds, ax
             mov     ax, $1700
             mov     cx, 2000
-
+            call    t1
 @@:         mov     word [bx],ax
             add     al, 1
             inc     bx
             inc     bx
-            loop    @b
-
+            dec     cx
+            jnz     @b
             hlt
+
+t1:         mov     [3998], word $2050
+            ret
