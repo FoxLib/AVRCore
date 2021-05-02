@@ -15,6 +15,9 @@
 #define DH_ (regs[2]>>8)
 #define BH_ (regs[3]>>8)
 
+#define REPINC(a,b) {if (flags & D_FLAG) a-=b; else a+=b; }
+#define REPINIT if (rep && CX_ == 0) break; ip_start = ip - 1;
+
 uint16_t flags;
 
 enum FlagBit
@@ -71,4 +74,5 @@ uint8_t  znptable8[256];    // Специальная таблица с Z,S,P
 uint16_t regs[8];
 uint16_t segs[4];
 uint32_t seg_cs, seg_ss, seg_es, seg_ds;
-uint16_t ip;
+uint16_t ip, ip_start;
+uint32_t tstates;

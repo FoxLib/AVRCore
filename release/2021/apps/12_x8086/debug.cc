@@ -27,7 +27,9 @@ void dumpregs() {
     D.print(flags & Z_FLAG ? "Z" : ".");
     D.print(flags & A_FLAG ? "A" : ".");
     D.print(flags & P_FLAG ? "P" : ".");
-    D.print(flags & C_FLAG ? "C" : ".");
+    D.print(flags & C_FLAG ? "C" : "."); D.print(" ");
+
+    D.print("tstates: [ "); D.print(tstates); D.print(" ]");
 
     for(;;);
 }
