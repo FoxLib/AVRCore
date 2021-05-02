@@ -161,9 +161,9 @@ always @(posedge CLOCK) begin
         2, 3: // 320x200x256
         {VGA_R, VGA_G, VGA_B} <=
         {   // 3:3:2
-            color_gd[7:5],color_gd[5],             // 3
-            color_gd[4:2],color_gd[2],             // 3
-            color_gd[1:0],color_gd[0],color_gd[0] // 2
+            color_gd[7:5],1'b0,  // 3
+            color_gd[4:2],1'b0,  // 3
+            color_gd[1:0],2'b00  // 2
         };
 
         default: {VGA_R, VGA_G, VGA_B} <= color;

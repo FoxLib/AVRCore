@@ -840,6 +840,17 @@ begin
 
         end
 
+        // MULS d16..31, r16..31
+        16'b0000_0010_xxxx_xxxx: begin
+
+            pc      <= pcnext;
+            alu     <= 24;
+            op1     <= r[ {1'b1, opcode[7:4]} ];
+            op2     <= r[ {1'b1, opcode[3:0]} ];
+            reg_wm  <= 1;
+
+        end
+
         // MULSU d16..23, r16..23
         16'b0000_0011_0xxx_0xxx: begin
 
@@ -850,6 +861,7 @@ begin
             reg_wm  <= 1;
 
         end
+
 
     endcase
 

@@ -1200,7 +1200,16 @@ int APP::step() {
 
         case MULS:
 
-            printf("Инструкция MULS $%04x в pc=$%04x\n", opcode, pc - 2); exit(2);
+            d = sram[ 0x10 | ((opcode & 0xf0) >> 4) ];
+            r = sram[ 0x10 |  (opcode & 0x0f) ];
+            d = (d & 0x80 ? 0xff00 : 0) | d;
+            r = (r & 0x80 ? 0xff00 : 0) | r;
+            v = (r * d) & 0xffff;
+            put16(0, v);
+
+            flag.c = v >> 15;
+            flag.z = v == 0;
+            flag_to_byte();
             break;
 
         // Signed * Unsigned
@@ -1445,6 +1454,8 @@ int APP::ds_info(uint addr) {
     int Rr = (opcode & 0x00F) | ((opcode & 0x200) >> 5);
     int Ap = (opcode & 0x00F) | ((opcode & 0x600) >> 5);
     int Ka = (opcode & 0x00F) | ((opcode & 0x0C0) >> 2);
+    int Rd4 = (opcode & 0xF0) >> 4;
+    int Rr4 = (opcode & 0x0F);
 
     // ADDR[7:0] = (~INST[8], INST[8], INST[10], INST[9], INST[3], INST[2], INST[1], INST[0])
     int Ld = (opcode & 0x00F) | ((opcode & 0x600) >> 5) | ((opcode & 0x100) >> 2) | (((~opcode) & 0x100) >> 1);
@@ -1472,6 +1483,8 @@ int APP::ds_info(uint addr) {
     char name_lds[32];  sprintf(name_lds,   "$%02X", Ld);
     char name_Rd4[32];  sprintf(name_Rd4,   "r%d", (Rd & 0xF)*2);
     char name_Rr4[32];  sprintf(name_Rr4,   "r%d", (Rr & 0xF)*2);
+    char name_Rd4m[32]; sprintf(name_Rd4m,  "r%d", 0x10 + (Rd4 & 0xF));
+    char name_Rr4m[32]; sprintf(name_Rr4m,  "r%d", 0x10 + (Rr4 & 0xF));
     char name_adiw[32]; sprintf(name_adiw,  "r%d", 24 + ((opcode & 0x30)>>3));
     char name_Ka[32];   sprintf(name_Ka,    "$%02X", Ka);
     char name_bit7[4];  sprintf(name_bit7,  "%d", Bit7);
@@ -1615,7 +1628,7 @@ int APP::ds_info(uint addr) {
     switch (opcode & 0xFF00) {
 
         case 0x0100: strcpy(mnem, "movw"); strcpy(op1, name_Rd4);  strcpy(op2, name_Rr4);  break; // Rd+1:Rd, Rr+1:Rr
-        case 0x0200: strcpy(mnem, "muls"); strcpy(op1, name_Rd);   strcpy(op2, name_Rr);   break; // Rd, Rr
+        case 0x0200: strcpy(mnem, "muls"); strcpy(op1, name_Rd4m); strcpy(op2, name_Rr4m);   break; // Rd, Rr
         case 0x9A00: strcpy(mnem, "sbi");  strcpy(op1, name_Ap8);  strcpy(op2, name_bit7); break; // A, b
         case 0x9B00: strcpy(mnem, "sbis"); strcpy(op1, name_Ap8);  strcpy(op2, name_bit7); break; // A, b
         case 0x9600: strcpy(mnem, "adiw"); strcpy(op1, name_adiw); strcpy(op2, name_Ka);   break; // Rd+1:Rd, K

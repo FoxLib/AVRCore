@@ -108,9 +108,6 @@ void APP::update_byte_scr(int addr) {
                 // 8bit -> 24bit
                 v = ((v&3)<<6) | ((v&0x1C)<<11) | ((v&0xE0)<<16);
 
-                // Коррекция
-                v = v | (v & 0x40 ? 0x3f : 0) | (v & 0x2000 ? 0x1f00 : 0) | (v & 0x200000 ? 0x1f0000 : 0);
-
                 for (int k = 0; k < 16; k++) pset(4*x + (k&3), 4*y + (k>>2), v);
             }
 
