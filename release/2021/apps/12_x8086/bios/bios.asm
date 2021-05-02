@@ -4,9 +4,14 @@
             mov     ax, $b800
             mov     es, ax
             mov     ax, $1701
-@@:         xor     di, di
+m1:         xor     di, di
             mov     cx, 2000
-            rep     stosw
-            inc     ax
-            jmp     @b
+@@:         stosw
+            add     al, 1
+            xor     al, bl
+            rol     bx, 1
+            xor     bh, bl
+            inc     bx
+            loop    @b
+            jmp     m1
             hlt
