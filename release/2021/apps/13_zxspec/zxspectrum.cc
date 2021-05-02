@@ -53,7 +53,13 @@ public:
     void io_write(unsigned int port, unsigned char data) {
 
         if ((port & 1) == 0) {
+
             border_id = get_color(data & 7);
+
+            G.block(0,     0, 319,   3, border_id);
+            G.block(0,   196, 319,  199, border_id);
+            G.block(0,     0,  31,  199, border_id);
+            G.block(288,   0, 319,  199, border_id);
         }
     }
 
