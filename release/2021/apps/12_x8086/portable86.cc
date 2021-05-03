@@ -1403,6 +1403,63 @@ void x86run() {
                 case 0xFC: flags &= ~D_FLAG;
                 case 0xFD: flags |=  D_FLAG;
 
+                // INC/DEC b8
+                case 0xFE: {
+
+                    fetchea();
+                    tempb = geteab();
+                    switch (cpu_reg) {
+
+                        case 0: seteab(setadd8nc(tempb, 1)); break;
+                        case 1: seteab(setsub8nc(tempb, 1)); break;
+                        default: ud();
+                    }
+                    break;
+                }
+
+                // Групповые смешанные
+                case 0xFF: {
+
+                    fetchea();
+                    tempw = geteaw();
+                    switch (cpu_reg) {
+
+                        case 0: seteaw(setadd16nc(tempw, 1)); break;
+                        case 1: seteaw(setsub16nc(tempw, 1)); break;
+
+                        // CALL
+                        case 2: push(ip); ip = tempw; break;
+
+                        // CALL far
+                        case 3: {
+
+                            tempw  = readmemw(segment, eaaddr);
+                            tempw2 = readmemw(segment, eaaddr + 2);
+                            callfar(tempw2, tempw);
+                            break;
+                        }
+
+                        // JMP
+                        case 4: ip = tempw; break;
+
+                        // JMP far
+                        case 5: {
+
+                            tempw  = readmemw(segment, eaaddr);
+                            tempw2 = readmemw(segment, eaaddr+2);
+                            loadcs(tempw2); ip = tempw;
+                            break;
+                        }
+
+                        // PUSH w
+                        case 6: push(geteaw()); break;
+
+                        default: ud();
+                    }
+                    break;
+                }
+
+
                 default: ud(); break;
             }
         }
