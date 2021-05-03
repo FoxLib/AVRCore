@@ -406,7 +406,7 @@ void interrupt(uint8_t int_id) {
 // Десятичная коррекция после сложения
 void daa() {
 
-    uint8_t  AL = regs[REG_AL];
+    uint8_t  AL = AL_;
     uint16_t tempi;
 
     if ((flags & A_FLAG) || ((AL & 0xF) > 9))
@@ -758,9 +758,12 @@ void ud() {
 void x86run() {
 
     int8_t   offset;
-    uint8_t  cont, tempc;
+    int16_t  tempws;
+    uint8_t  cont, tempc, noint;
     uint8_t  tempb, tempb2;
     uint16_t tempw, tempw2;
+    uint32_t templ;
+    int32_t  templs;
 
     for (;;) {
 
@@ -770,6 +773,7 @@ void x86run() {
         rep     = 0;
         cont    = 0;
         sel_seg = 0;
+        noint   = 0;
         segment = seg_ds;
         tempc   = flags & C_FLAG;
         tstates++;
@@ -806,7 +810,7 @@ void x86run() {
                 case 0x14: setr8 (REG_AL, setadc8 (regs[REG_AL], getbyte(), tempc)); break;
                 case 0x15: setr16(REG_AX, setadc16(regs[REG_AX], getword(), tempc)); break;
                 case 0x16: push(segs[SEG_SS]); break;
-                case 0x17: loadss(pop()); break;
+                case 0x17: loadss(pop()); noint = 1; break;
 
                 // SBB
                 case 0x18: fetchea(); seteab(setsbc8 (geteab(), getr8 (cpu_reg), tempc)); break;
@@ -992,6 +996,7 @@ void x86run() {
                 case 0x8E: {
 
                     fetchea();
+                    noint = 1;
                     switch (rmdat & 0x38) {
                         case 0x00: loades(geteaw()); break;
                         case 0x08: ud(); break;
@@ -1095,31 +1100,34 @@ void x86run() {
                 }
 
                 // STOSW
-                case 0xAB:
+                case 0xAB: {
 
                     REPINIT;
                     writememw(seg_es, DI_, AX_);
                     REPINC(DI_, 2);
                     autorep(0);
                     break;
+                }
 
                 // LODSB
-                case 0xAC:
+                case 0xAC: {
 
                     REPINIT;
                     setr8(REG_AL, readmemb(segment + SI_));
                     REPINC(SI_, 1);
                     autorep(0);
                     break;
+                }
 
                 // LODSW
-                case 0xAD:
+                case 0xAD: {
 
                     REPINIT;
                     AX_ = readmemw(segment, SI_);
                     REPINC(SI_, 2);
                     autorep(0);
                     break;
+                }
 
                 // SCASB
                 case 0xAE: {
@@ -1240,6 +1248,152 @@ void x86run() {
                 case 0xF3: rep = REPZ; cont = 1; break;
                 case 0xF4: inhlt = 1; ip--; break;
                 case 0xF5: flags ^= C_FLAG; break;
+
+                // Групповые инструкции #byte
+                case 0xF6: {
+
+                    fetchea(); tempb = geteab();
+                    switch (cpu_reg) {
+
+                        // TEST/NOT/NEG b
+                        case 0:
+                        case 1: setand8(tempb, getbyte()); break;
+                        case 2: seteab(~tempb); break;
+                        case 3: seteab(setsub8(0, tempb)); break;
+
+                        // MUL AL, b
+                        case 4: {
+
+                            setznp8(AL_);
+                            AX_ = AL_ * tempb;
+                            if (AX_) flags &= ~Z_FLAG;           else flags |= Z_FLAG;
+                            if (AH_) flags |= (C_FLAG | V_FLAG); else flags &= ~(C_FLAG|V_FLAG);
+                            break;
+                        }
+
+                        // IMUL AL, b
+                        case 5: {
+
+                            setznp8(AL_);
+                            AX_ = (int16_t)((int8_t)AL_)*(int16_t)((int8_t)tempb);
+                            if (AX_) flags &= ~Z_FLAG;         else flags |= Z_FLAG;
+                            if (AH_) flags |= (C_FLAG|V_FLAG); else flags &= ~(C_FLAG|V_FLAG);
+                            break;
+                        }
+
+                        // DIV AL, b
+                        case 6: {
+
+                            tempw = AX_;
+                            if (tempb) {
+
+                                tempw2 = tempw % tempb;
+                                tempw /= tempb;
+                                setr8(REG_AH, tempw2);
+                                setr8(REG_AL, tempw);
+
+                            } else interrupt(0);
+
+                            break;
+                        }
+
+                        // IDIV AL, b
+                        case 7: {
+
+                            tempws = (int16_t) AX_;
+                            if (tempb) {
+
+                                tempw2  = tempws % (int16_t)((int8_t)tempb);
+                                tempws /= (int16_t)((int8_t)tempb);
+                                setr8(REG_AH, tempw2);
+                                setr8(REG_AL, tempws);
+
+                            } else interrupt(0);
+
+                            break;
+                        }
+                    }
+                    break;
+                }
+
+                // Групповые инструкции #word
+                case 0xF7: {
+
+                    fetchea(); tempw = geteaw();
+                    switch (cpu_reg) {
+
+                        // TEST/NOT/NEG w
+                        case 0:
+                        case 1: setand16(tempw, getword()); break;
+                        case 2: seteaw(~tempw); break;
+                        case 3: seteaw(setsub16(0, tempw)); break;
+
+                        // MUL AX, w
+                        case 4: {
+
+                            setznp16(AX_);
+                            templ = AX_ * tempw;
+                            AX_ = templ;
+                            DX_ = templ >> 16;
+                            if (AX_ | DX_)   flags &= ~Z_FLAG; else flags |= Z_FLAG;
+                            if (DX_) flags |= (C_FLAG|V_FLAG); else flags &= ~(C_FLAG|V_FLAG);
+                            break;
+                        }
+
+                        // IMUL AX, w
+                        case 5: {
+
+                            setznp16(AX_);
+                            templ = (long)((int16_t)AX_) * (long)((int16_t)tempw);
+
+                            AX_ = templ;
+                            DX_ = (uint16_t)(templ >> 16);
+
+                            if (AX_ && DX_ != 0xFFFF)
+                                 flags |=  (C_FLAG | V_FLAG);
+                            else flags &= ~(C_FLAG | V_FLAG);
+
+                            if (AX_ | DX_) flags &= ~Z_FLAG; else flags |= Z_FLAG;
+                            break;
+                        }
+
+                        // DIV AX, w
+                        case 6: {
+
+                            templ = ((uint32_t)DX_ << 16) | AX_;
+                            if (tempw)
+                            {
+                                tempw2 = templ % tempw;
+                                templ /= tempw;
+                                DX_ = tempw2;
+                                AX_ = templ;
+                            }
+                            else interrupt(0);
+                            break;
+                        }
+
+                        // IDIV AX, w
+                        case 7: {
+
+                            if (DX_ != 0 && DX_ != 0xFFFF) {
+                                interrupt(0);
+                                break;
+                            }
+
+                            templs = (int)(((int32_t)DX_ << 16) | AX_);
+                            if (tempw)
+                            {
+                                tempw2  = templs % (int32_t)tempw;
+                                templs /= (int32_t)tempw;
+                                DX_ = tempw2;
+                                AX_ = templs;
+                            }
+                            else interrupt(0);
+                            break;
+                        }
+                    }
+                    break;
+                }
 
                 // CLC, STC, CLI, STI
                 case 0xF8: flags &= ~C_FLAG;
