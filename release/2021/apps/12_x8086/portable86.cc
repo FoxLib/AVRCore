@@ -764,6 +764,7 @@ void x86run() {
     uint16_t tempw, tempw2;
     uint32_t templ;
     int32_t  templs;
+    int8_t   trap;
 
     for (;;) {
 
@@ -771,6 +772,7 @@ void x86run() {
         if (inhlt) return;
 
         rep     = 0;
+        trap    = flags & T_FLAG;
         cont    = 0;
         sel_seg = 0;
         noint   = 0;
@@ -1465,7 +1467,8 @@ void x86run() {
         }
         while (cont);
 
-        // Обработка прерываний после инструкции
+        // Если вызван trap
+        if (trap && (flags & T_FLAG) && !noint) interrupt(1);
     }
 }
 
