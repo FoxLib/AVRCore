@@ -65,7 +65,8 @@ uint8_t  sel_seg, rep;
 uint16_t eaaddr;
 uint32_t segment;
 
-uint8_t  znptable8[256];    // Специальная таблица с Z,S,P
+// Специальная таблица с Z,S,P
+uint8_t  znptable8[256];
 
 // 0 AX=AH:AL | 4 SP
 // 1 CX=CH:CL | 5 BP
