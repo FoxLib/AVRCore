@@ -722,7 +722,7 @@ void autorep(uint8_t flag_test) {
 // Заполнение данными
 void initcpu() {
 
-    byte d, c = 0;
+    unsigned char d, c = 0;
 
     do
     {
@@ -755,7 +755,7 @@ void ud() {
 }
 
 // Запуск в работу
-void x86run() {
+void x86run(int32_t instr_cnt) {
 
     int8_t   offset;
     int16_t  tempws;
@@ -766,7 +766,7 @@ void x86run() {
     int32_t  templs;
     int8_t   trap;
 
-    for (;;) {
+    while (instr_cnt-- >= 0) {
 
         // Остановка процессора
         if (inhlt) return;
@@ -782,7 +782,8 @@ void x86run() {
 
         do {
 
-            switch (opcode = getbyte()) {
+            opcode = getbyte();
+            switch (opcode) {
 
                 // ADD
                 case 0x00: fetchea(); seteab(setadd8 (geteab(), getr8 (cpu_reg))); break;

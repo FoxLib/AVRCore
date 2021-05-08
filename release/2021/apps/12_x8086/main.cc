@@ -19,8 +19,8 @@ int main() {
 
     for (;;) {
 
-        x86run();
-        dumpregs();
+        x86run(1024);
+        if (inhlt) dumpregs();
     }
 
 }
