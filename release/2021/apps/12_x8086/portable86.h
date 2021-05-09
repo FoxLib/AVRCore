@@ -16,7 +16,7 @@
 #define BH_ (regs[3]>>8)
 
 #define REPINC(a,b) {if (flags & D_FLAG) a-=b; else a+=b; }
-#define REPINIT if (rep && CX_ == 0) break; ip_start = ip - 1;
+#define REPINIT if (rep && CX_ == 0) break;
 
 uint16_t flags;
 

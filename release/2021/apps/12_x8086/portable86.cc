@@ -773,15 +773,16 @@ void x86run(int32_t instr_cnt) {
 
         rep     = 0;
         trap    = flags & T_FLAG;
-        cont    = 0;
         sel_seg = 0;
         noint   = 0;
         segment = seg_ds;
         tempc   = flags & C_FLAG;
         tstates++;
+        ip_start = ip;
 
         do {
 
+            cont   = 0;
             opcode = getbyte();
             switch (opcode) {
 
@@ -1236,7 +1237,7 @@ void x86run(int32_t instr_cnt) {
                 case 0xE8: tempw = getword(); push(ip); ip += tempw; break;
                 case 0xE9: tempw = getword(); ip += tempw; break;
                 case 0xEA: tempw = getword(); tempw2 = getword(); loadcs(tempw2); ip = tempw; break;
-                case 0xEB: offset = (int8_t)getbyte(); ip += offset; break;
+                case 0xEB: tempb = getbyte(); ip += (tempb & 0x80 ? tempb - 256 : tempb); break;
 
                 // IN/OUT dx
                 case 0xEC: setr8(REG_AL, ioread(DX_)); break;
@@ -1399,12 +1400,12 @@ void x86run(int32_t instr_cnt) {
                 }
 
                 // CLC, STC, CLI, STI
-                case 0xF8: flags &= ~C_FLAG;
-                case 0xF9: flags |=  C_FLAG;
-                case 0xFA: flags &= ~I_FLAG;
-                case 0xFB: flags |=  I_FLAG;
-                case 0xFC: flags &= ~D_FLAG;
-                case 0xFD: flags |=  D_FLAG;
+                case 0xF8: flags &= ~C_FLAG; break;
+                case 0xF9: flags |=  C_FLAG; break;
+                case 0xFA: flags &= ~I_FLAG; break;
+                case 0xFB: flags |=  I_FLAG; break;
+                case 0xFC: flags &= ~D_FLAG; break;
+                case 0xFD: flags |=  D_FLAG; break;
 
                 // INC/DEC b8
                 case 0xFE: {
@@ -1461,7 +1462,6 @@ void x86run(int32_t instr_cnt) {
                     }
                     break;
                 }
-
 
                 default: ud(); break;
             }
