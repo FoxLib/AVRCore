@@ -1024,8 +1024,8 @@ void x86run(int32_t instr_cnt) {
                 }
 
                 // CBW, CWD
-                case 0x98: AX_ = (AX_ & 0x0080  ? 0xff00 : 0) | (AX_ & 0xff);
-                case 0x99: DX_ = (AX_ & 0x8000) ? 0xffff : 0;
+                case 0x98: AX_ = (AX_ & 0x0080  ? 0xff00 : 0) | (AX_ & 0xff); break;
+                case 0x99: DX_ = (AX_ & 0x8000) ? 0xffff : 0; break;
 
                 // CALL cs:ip
                 case 0x9A: tempw = getword(); callfar(getword(), tempw); break;
@@ -1197,6 +1197,8 @@ void x86run(int32_t instr_cnt) {
                 case 0xCC: interrupt(3); break;
                 case 0xCD: interrupt(getbyte()); break;
                 case 0xCE: if (flags & V_FLAG) interrupt(4); break;
+
+                // IRET
                 case 0xCF: tempw = pop(); tempw2 = pop(); flags = pop() & 0xfff; loadcs(tempw2); ip = tempw; break;
 
                 // Сдвиговые
@@ -1385,10 +1387,11 @@ void x86run(int32_t instr_cnt) {
                             }
 
                             templs = (int)(((int32_t)DX_ << 16) | AX_);
+
                             if (tempw)
                             {
-                                tempw2  = templs % (int32_t)tempw;
-                                templs /= (int32_t)tempw;
+                                tempw2  = templs % (int32_t)(int16_t)tempw;
+                                templs /= (int32_t)(int16_t)tempw;
                                 DX_ = tempw2;
                                 AX_ = templs;
                             }
