@@ -273,6 +273,8 @@ void loadcs(uint16_t s) { segs[SEG_CS] = s; seg_cs = (uint32_t)s << 4; }
 void loadss(uint16_t s) { segs[SEG_SS] = s; seg_ss = (uint32_t)s << 4; }
 void loades(uint16_t s) { segs[SEG_ES] = s; seg_es = (uint32_t)s << 4; }
 void loadds(uint16_t s) { segs[SEG_DS] = s; seg_ds = (uint32_t)s << 4; }
+void loadfs(uint16_t s) { segs[SEG_FS] = s; seg_fs = (uint32_t)s << 4; }
+void loadgs(uint16_t s) { segs[SEG_GS] = s; seg_gs = (uint32_t)s << 4; }
 
 // Считывание следующего кода из CS:IP
 inline uint8_t getbyte() { return readmemb(seg_cs + (ip++)); }
@@ -606,13 +608,12 @@ uint16_t groupshift(uint8_t mode, uint8_t bit, uint16_t temp, uint8_t n) {
             while (n > 0) {
 
                 tmpc  = flags & C_FLAG;
-                temp2 = temp & sign_bit;
-                temp <<= 1;
-                if (temp2) flags |= C_FLAG; else flags &= ~C_FLAG;
-                if (tmpc) temp |= 1;
+                if (temp & sign_bit) flags |= C_FLAG; else flags &= ~C_FLAG;
+                temp  = (temp << 1) | tmpc;
                 n--;
             }
 
+            // Установить флаги после обновления
             if (!!(flags & C_FLAG) != !!(temp & sign_bit)) flags |= V_FLAG;
             break;
         }
@@ -656,7 +657,7 @@ uint16_t groupshift(uint8_t mode, uint8_t bit, uint16_t temp, uint8_t n) {
         case 5: {
 
             flags &= ~(C_FLAG);
-            if (n > 8){
+            if (n > (bit ? 16 : 8)){
                 temp = 0;
             } else {
                 if ((temp >> (n-1)) & 1) flags |= C_FLAG;
@@ -745,17 +746,72 @@ void initcpu() {
 
     ip  = 0x0000;
     SP_ = 0x0000;
+    AX_ = 0x0000;
 
     inhlt = 0;
     tstates = 0;
 }
 
 // Undefined
-void ud() {
+void ud(int type) {
+
+    ip--;
+    printf("[%04x:%04x] %02x UNDEFINED %02x\n", seg_cs, ip, readmemb(seg_cs + ip), type); exit(1);
+}
+
+// Расширенная инструкция
+void extended() {
+
+    opcode = getbyte();
+
+    int16_t offset;
+
+    switch (opcode) {
+
+        // RDTSC
+        case 0x31: AX_ = rdtsc&0xffff; DX_ = 0; break;
+
+        // JO, JNO
+        case 0x80: offset = (int16_t)getword(); if   (flags&V_FLAG)  ip += offset; break;
+        case 0x81: offset = (int16_t)getword(); if (!(flags&V_FLAG)) ip += offset; break;
+
+        // JB, JNB
+        case 0x82: offset = (int16_t)getword(); if   (flags&C_FLAG)  ip += offset; break;
+        case 0x83: offset = (int16_t)getword(); if (!(flags&C_FLAG)) ip += offset; break;
+
+        // JZ, JNZ
+        case 0x84: offset = (int16_t)getword(); if   (flags&Z_FLAG)  ip += offset; break;
+        case 0x85: offset = (int16_t)getword(); if (!(flags&Z_FLAG)) ip += offset; break;
+
+        // JBE, JNBE
+        case 0x86: offset = (int16_t)getword(); if   (flags&(C_FLAG|Z_FLAG))  ip += offset; break;
+        case 0x87: offset = (int16_t)getword(); if (!(flags&(C_FLAG|Z_FLAG))) ip += offset; break;
+
+        // JS, JNS
+        case 0x88: offset = (int16_t)getword(); if   (flags&N_FLAG)  ip += offset; break;
+        case 0x89: offset = (int16_t)getword(); if (!(flags&N_FLAG)) ip += offset; break;
+
+        // JP, JNP
+        case 0x8A: offset = (int16_t)getword(); if   (flags&P_FLAG)  ip += offset; break;
+        case 0x8B: offset = (int16_t)getword(); if (!(flags&P_FLAG)) ip += offset; break;
+
+        // JL, JNL
+        case 0x8C: offset = (int16_t)getword(); if (!!(flags&N_FLAG) != !!(flags&V_FLAG)) ip += offset; break;
+        case 0x8D: offset = (int16_t)getword(); if (!!(flags&N_FLAG) == !!(flags&V_FLAG)) ip += offset; break;
+
+        // JLE, JNLE: ZF=1 OR (SF!=OF); ZF=0 AND (SF=OF)
+        case 0x8E: offset = (int16_t)getword(); if ( (flags&Z_FLAG) ||  !!(flags&N_FLAG) != !!(flags&V_FLAG))  ip += offset; break;
+        case 0x8F: offset = (int16_t)getword(); if (!(flags&Z_FLAG) && (!!(flags&N_FLAG) == !!(flags&V_FLAG))) ip += offset; break;
+
+        default:
+
+            ud(7);
+            break;
+    }
 }
 
 // Запуск в работу
-void x86run(int32_t instr_cnt) {
+int x86run(int32_t instr_cnt) {
 
     int8_t   offset;
     int16_t  tempws;
@@ -769,7 +825,7 @@ void x86run(int32_t instr_cnt) {
     while (instr_cnt-- >= 0) {
 
         // Остановка процессора
-        if (inhlt) return;
+        if (inhlt) return 1;
 
         rep     = 0;
         trap    = flags & T_FLAG;
@@ -782,6 +838,7 @@ void x86run(int32_t instr_cnt) {
 
         do {
 
+            rdtsc++;
             cont   = 0;
             opcode = getbyte();
             switch (opcode) {
@@ -804,7 +861,7 @@ void x86run(int32_t instr_cnt) {
                 case 0x0C: setr8 (REG_AL, setor8 (regs[REG_AL], getbyte())); break;
                 case 0x0D: setr16(REG_AX, setor16(regs[REG_AX], getword())); break;
                 case 0x0E: push(segs[SEG_CS]); break;
-                case 0x0F: /* EXTENDED */ getbyte(); break;
+                case 0x0F: extended(); break;
 
                 // ADС
                 case 0x10: fetchea(); seteab(setadc8 (geteab(), getr8 (cpu_reg), tempc)); break;
@@ -898,7 +955,40 @@ void x86run(int32_t instr_cnt) {
                     break;
                 }
 
-                // 60-6F <Undefined-8086>
+                // FS: GS:
+                case 0x64: sel_seg = 1; segment = seg_fs; cont = 1; break;
+                case 0x65: sel_seg = 1; segment = seg_gs; cont = 1; break;
+
+                // IMUL r16,rm,i16
+                case 0x69: {
+
+                    fetchea();
+                    tempw = getword();
+                    templ = (long)((int16_t)geteaw()) * (long)((int16_t)tempw);
+                    setr16(cpu_reg, templ);
+
+                    if (templ & 0xffff0000)
+                         flags |=  (C_FLAG | V_FLAG);
+                    else flags &= ~(C_FLAG | V_FLAG);
+
+                    break;
+                }
+
+                // IMUL r16,rm,i8
+                case 0x6B: {
+
+                    fetchea();
+                    tempw = getbyte();
+                    tempw = tempw & 0x80 ? (0xff00 | tempw) : tempw;
+                    templ = (long)((int16_t)geteaw()) * (long)((int16_t)tempw);
+                    setr16(cpu_reg, templ);
+
+                    if (templ & 0xffff0000)
+                         flags |=  (C_FLAG | V_FLAG);
+                    else flags &= ~(C_FLAG | V_FLAG);
+
+                    break;
+                }
 
                 // JO, JNO
                 case 0x70: offset = (int8_t)getbyte(); if   (flags&V_FLAG)  ip += offset; break;
@@ -989,6 +1079,8 @@ void x86run(int32_t instr_cnt) {
                         case 0x08: seteaw(segs[SEG_CS]); break;
                         case 0x10: seteaw(segs[SEG_SS]); break;
                         case 0x18: seteaw(segs[SEG_DS]); break;
+                        case 0x20: seteaw(segs[SEG_FS]); break;
+                        case 0x28: seteaw(segs[SEG_GS]); break;
                     }
                     break;
                 }
@@ -1003,9 +1095,11 @@ void x86run(int32_t instr_cnt) {
                     noint = 1;
                     switch (rmdat & 0x38) {
                         case 0x00: loades(geteaw()); break;
-                        case 0x08: ud(); break;
+                        case 0x08: ud(6); break;
                         case 0x10: loadss(geteaw()); break;
                         case 0x18: loadds(geteaw()); break;
+                        case 0x20: loadfs(geteaw()); break;
+                        case 0x28: loadgs(geteaw()); break;
                     }
                     break;
                 }
@@ -1032,7 +1126,7 @@ void x86run(int32_t instr_cnt) {
                 case 0x9B: /* FWAIT */ break;
 
                 // PUSHF/POPF
-                case 0x9C: push(flags|0xF000); break;
+                case 0x9C: push((flags & ~0x2A) | 2); break;
                 case 0x9D: flags = pop() & 0xfff; break;
 
                 // SAHF, LAHF
@@ -1170,8 +1264,8 @@ void x86run(int32_t instr_cnt) {
                 }
 
                 // Grp#shift
-                case 0xC0: fetchea(); tempb = getbyte(); seteab(groupshift(cpu_reg, 0, geteab(), tempb)); break;
-                case 0xC1: fetchea(); tempb = getbyte(); seteaw(groupshift(cpu_reg, 1, geteaw(), tempb)); break;
+                case 0xC0: fetchea(); tempb = getbyte(); seteab(groupshift(cpu_reg, 0, geteab(), tempb & 7)); break;
+                case 0xC1: fetchea(); tempb = getbyte(); seteaw(groupshift(cpu_reg, 1, geteaw(), tempb & 31)); break;
 
                 // RET #16/RET
                 case 0xC2: tempw = getword(); ip = pop(); SP_ += tempw; break;
@@ -1186,8 +1280,8 @@ void x86run(int32_t instr_cnt) {
                 case 0xC7: fetchea(); seteaw(getword()); break;
 
                 // ENTER / LEAVE
-                case 0xC8: ud(); break;
-                case 0xC9: ud(); break;
+                case 0xC8: ud(4); break;
+                case 0xC9: ud(5); break;
 
                 // RETF [#16]
                 case 0xCA: tempw = getword(); tempw2 = pop(); loadcs(pop()); ip = tempw; SP_ += tempw; break;
@@ -1205,7 +1299,7 @@ void x86run(int32_t instr_cnt) {
                 case 0xD0: fetchea(); seteab(groupshift(cpu_reg, 0, geteab(), 1)); break;
                 case 0xD1: fetchea(); seteaw(groupshift(cpu_reg, 1, geteaw(), 1)); break;
                 case 0xD2: fetchea(); seteab(groupshift(cpu_reg, 0, geteab(), CX_&7));  break;
-                case 0xD3: fetchea(); seteaw(groupshift(cpu_reg, 1, geteaw(), CX_&15)); break;
+                case 0xD3: fetchea(); seteaw(groupshift(cpu_reg, 1, geteaw(), CX_&31)); break;
 
                 // AAM, AAD
                 case 0xD4: aam(); break;
@@ -1213,7 +1307,7 @@ void x86run(int32_t instr_cnt) {
 
                 // SALC, XLAT
                 case 0xD6: setr8(REG_AL, flags & C_FLAG ? 0xff : 00);
-                case 0xD7: setr8(REG_AL, readmemb(seg_ds + BX_ + (AX_ & 255))); break;
+                case 0xD7: setr8(REG_AL, readmemb(segment + BX_ + (AX_ & 255))); break;
 
                 // ESC-последовательности
                 case 0xD8: case 0xD9: case 0xDA: case 0xDB:
@@ -1419,7 +1513,7 @@ void x86run(int32_t instr_cnt) {
 
                         case 0: seteab(setadd8nc(tempb, 1)); break;
                         case 1: seteab(setsub8nc(tempb, 1)); break;
-                        default: ud();
+                        default: ud(3);
                     }
                     break;
                 }
@@ -1461,12 +1555,12 @@ void x86run(int32_t instr_cnt) {
                         // PUSH w
                         case 6: push(geteaw()); break;
 
-                        default: ud();
+                        default: ud(1);
                     }
                     break;
                 }
 
-                default: ud(); break;
+                default: ud(2); break;
             }
         }
         while (cont);
@@ -1474,5 +1568,7 @@ void x86run(int32_t instr_cnt) {
         // Если вызван trap
         if (trap && (flags & T_FLAG) && !noint) interrupt(1);
     }
+
+    return 0;
 }
 

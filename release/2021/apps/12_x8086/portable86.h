@@ -19,6 +19,7 @@
 #define REPINIT if (rep && CX_ == 0) break;
 
 uint16_t flags;
+uint32_t rdtsc;
 
 enum FlagBit
 {
@@ -50,7 +51,9 @@ enum SegID {
     SEG_ES = 0,
     SEG_CS = 1,
     SEG_SS = 2,
-    SEG_DS = 3
+    SEG_DS = 3,
+    SEG_FS = 4,
+    SEG_GS = 5
 };
 
 enum Prefixes {
@@ -74,6 +77,6 @@ uint8_t  znptable8[256];
 // 3 BX=BH:BL | 7 DI
 uint16_t regs[8];
 uint16_t segs[4];
-uint32_t seg_cs, seg_ss, seg_es, seg_ds;
+uint32_t seg_cs, seg_ss, seg_es, seg_ds, seg_fs, seg_gs;
 uint16_t ip, ip_start;
 uint32_t tstates;
