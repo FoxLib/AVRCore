@@ -756,7 +756,11 @@ void initcpu() {
 void ud(int type) {
 
     ip--;
-    printf("[%04x:%04x] %02x UNDEFINED %02x\n", seg_cs, ip, readmemb(seg_cs + ip), type); exit(1);
+
+    printf("[%04x:%04x] %02x UNDEFINED %02x\n", seg_cs, ip, readmemb(seg_cs + ip), type);
+    // printf("fs=%04x\n", seg_fs);
+
+    exit(1);
 }
 
 // Расширенная инструкция
@@ -958,6 +962,10 @@ int x86run(int32_t instr_cnt) {
                 // FS: GS:
                 case 0x64: sel_seg = 1; segment = seg_fs; cont = 1; break;
                 case 0x65: sel_seg = 1; segment = seg_gs; cont = 1; break;
+
+                // PUSH imm16
+                case 0x68: push(getword()); break;
+                case 0x6a: tempw = getbyte(); tempw = (tempw & 0x80 ? 0xff00 : 0) | tempw; push(tempw); break;
 
                 // IMUL r16,rm,i16
                 case 0x69: {
