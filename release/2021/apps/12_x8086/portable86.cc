@@ -657,7 +657,7 @@ uint16_t groupshift(uint8_t mode, uint8_t bit, uint16_t temp, uint8_t n) {
         case 5: {
 
             flags &= ~(C_FLAG);
-            if (n > (bit ? 16 : 8)){
+            if (n > (bit ? 16 : 8)) {
                 temp = 0;
             } else {
                 if ((temp >> (n-1)) & 1) flags |= C_FLAG;
@@ -826,6 +826,11 @@ int x86run(int32_t instr_cnt) {
     int32_t  templs;
     int8_t   trap;
 
+#ifdef DEBUGLOG
+    FILE* fdebug = fopen("debug.log", "a+");
+    char  sdebug[256];
+#endif
+
     while (instr_cnt-- >= 0) {
 
         // Остановка процессора
@@ -845,6 +850,14 @@ int x86run(int32_t instr_cnt) {
             rdtsc++;
             cont   = 0;
             opcode = getbyte();
+
+#ifdef DEBUGLOG
+        if (segs[SEG_CS] == 0x7B0) {
+            sprintf(sdebug, "%04x:%04x %02x\n", segs[SEG_CS], ip, opcode);
+            fputs(sdebug, fdebug);
+        }
+#endif
+
             switch (opcode) {
 
                 // ADD
@@ -956,6 +969,27 @@ int x86run(int32_t instr_cnt) {
                 case 0x5C: case 0x5D: case 0x5E: case 0x5F: {
 
                     regs[opcode&7] = pop();
+                    break;
+                }
+
+                // PUSHA
+                case 0x60: {
+
+                    tempw = regs[REG_SP];
+                    for (int i = 0; i < 8; i++)
+                        push(i == REG_SP ? tempw : regs[i]);
+
+                    break;
+                }
+
+                // POPA
+                case 0x61: {
+
+                    for (int i = 7; i >= 0; i--) {
+                        if (i == REG_SP) tempw = pop();
+                        else regs[i] = pop();
+                    }
+                    regs[REG_SP] = tempw;
                     break;
                 }
 
@@ -1576,6 +1610,10 @@ int x86run(int32_t instr_cnt) {
         // Если вызван trap
         if (trap && (flags & T_FLAG) && !noint) interrupt(1);
     }
+
+#ifdef DEBUGLOG
+    fclose(fdebug);
+#endif
 
     return 0;
 }
