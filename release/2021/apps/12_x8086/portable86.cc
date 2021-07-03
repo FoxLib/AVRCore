@@ -807,6 +807,10 @@ void extended() {
         case 0x8E: offset = (int16_t)getword(); if ( (flags&Z_FLAG) ||  !!(flags&N_FLAG) != !!(flags&V_FLAG))  ip += offset; break;
         case 0x8F: offset = (int16_t)getword(); if (!(flags&Z_FLAG) && (!!(flags&N_FLAG) == !!(flags&V_FLAG))) ip += offset; break;
 
+        // MOVZX r16, rm8/16
+        case 0xB6: fetchea(); setr16(cpu_reg, geteab()); break;
+        case 0xB7: fetchea(); setr16(cpu_reg, geteaw()); break;
+
         default:
 
             ud(7);
@@ -825,6 +829,7 @@ int x86run(int32_t instr_cnt) {
     uint32_t templ;
     int32_t  templs;
     int8_t   trap;
+    int8_t   p66, p67;
 
 #ifdef DEBUGLOG
     FILE* fdebug = fopen("debug.log", "a+");
@@ -840,6 +845,8 @@ int x86run(int32_t instr_cnt) {
         trap    = flags & T_FLAG;
         sel_seg = 0;
         noint   = 0;
+        p66     = 0;
+        p67     = 0;
         segment = seg_ds;
         tempc   = flags & C_FLAG;
         tstates++;
@@ -996,6 +1003,10 @@ int x86run(int32_t instr_cnt) {
                 // FS: GS:
                 case 0x64: sel_seg = 1; segment = seg_fs; cont = 1; break;
                 case 0x65: sel_seg = 1; segment = seg_gs; cont = 1; break;
+
+                // opsize, adsize
+                case 0x66: p66 = ~p66; cont = 1; break;
+                case 0x67: p67 = ~p67; cont = 1; break;
 
                 // PUSH imm16
                 case 0x68: push(getword()); break;
@@ -1197,8 +1208,8 @@ int x86run(int32_t instr_cnt) {
 
                     REPINIT;
                     writememw(seg_es, DI_, readmemw(segment, SI_));
-                    REPINC(SI_, 2);
-                    REPINC(DI_, 2);
+                    REPINC(SI_, p66 ? 4 : 2);
+                    REPINC(DI_, p66 ? 4 : 2);
                     autorep(0);
                     break;
                 }
@@ -1219,8 +1230,8 @@ int x86run(int32_t instr_cnt) {
 
                     REPINIT;
                     setsub16(readmemw(segment, SI_), readmemw(seg_es,  DI_));
-                    REPINC(SI_,2);
-                    REPINC(DI_,2);
+                    REPINC(SI_, p66 ? 4 : 2);
+                    REPINC(DI_, p66 ? 4 : 2);
                     autorep(0);
                     break;
                 }
@@ -1244,7 +1255,7 @@ int x86run(int32_t instr_cnt) {
 
                     REPINIT;
                     writememw(seg_es, DI_, AX_);
-                    REPINC(DI_, 2);
+                    REPINC(DI_, p66 ? 4 : 2);
                     autorep(0);
                     break;
                 }
@@ -1264,7 +1275,7 @@ int x86run(int32_t instr_cnt) {
 
                     REPINIT;
                     AX_ = readmemw(segment, SI_);
-                    REPINC(SI_, 2);
+                    REPINC(SI_, p66 ? 4 : 2);
                     autorep(0);
                     break;
                 }
@@ -1284,7 +1295,7 @@ int x86run(int32_t instr_cnt) {
 
                     REPINIT;
                     setsub16(AX_, readmemw(seg_es,  DI_));
-                    REPINC(DI_, 1);
+                    REPINC(DI_, p66 ? 4 : 2);
                     autorep(1);
                     break;
                 }
