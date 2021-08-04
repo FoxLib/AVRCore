@@ -1,0 +1,35 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Wed Aug  4 11:37:39 2021
+[*]
+[dumpfile] "/disk/fox/dev/avr/release/2021.08/machine/tb.vcd"
+[dumpfile_mtime] "Wed Aug  4 11:28:20 2021"
+[dumpfile_size] 48238
+[savefile] "/disk/fox/dev/avr/release/2021.08/machine/tb.gtkw"
+[timestart] 0
+[size] 1920 1031
+[pos] -1 -1
+*-5.000000 2 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 248
+[signals_width] 235
+[sst_expanded] 1
+[sst_vpaned_height] 298
+@800200
+-MAIN
+@28
+tb.clock
+tb.clock_25
+tb.clock_50
+@23
+tb.address[15:0]
+@22
+tb.i_data[7:0]
+tb.o_data[7:0]
+tb.pc[15:0]
+tb.ir[15:0]
+@28
+tb.we
+@1000200
+-MAIN
+[pattern_trace] 1
+[pattern_trace] 0
