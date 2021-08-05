@@ -1,35 +1,57 @@
 [*]
 [*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
-[*] Wed Aug  4 11:37:39 2021
+[*] Thu Aug  5 11:58:56 2021
 [*]
 [dumpfile] "/disk/fox/dev/avr/release/2021.08/machine/tb.vcd"
-[dumpfile_mtime] "Wed Aug  4 11:28:20 2021"
-[dumpfile_size] 48238
+[dumpfile_mtime] "Thu Aug  5 11:58:35 2021"
+[dumpfile_size] 76366
 [savefile] "/disk/fox/dev/avr/release/2021.08/machine/tb.gtkw"
 [timestart] 0
 [size] 1920 1031
 [pos] -1 -1
-*-5.000000 2 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-5.000000 75 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb.
 [sst_width] 248
 [signals_width] 235
 [sst_expanded] 1
-[sst_vpaned_height] 298
+[sst_vpaned_height] 299
 @800200
 -MAIN
 @28
 tb.clock
 tb.clock_25
-tb.clock_50
-@23
-tb.address[15:0]
 @22
+tb.CoreUnit.st[3:0]
+@23
+tb.ir[15:0]
+@22
+tb.CoreUnit.opcode[15:0]
+tb.address[15:0]
+tb.CoreUnit.cursor[15:0]
+tb.CoreUnit.addr_w[15:0]
 tb.i_data[7:0]
 tb.o_data[7:0]
 tb.pc[15:0]
-tb.ir[15:0]
 @28
 tb.we
 @1000200
 -MAIN
+@800200
+-State
+@22
+tb.CoreUnit.alu[4:0]
+@28
+tb.CoreUnit.sreg_w
+tb.CoreUnit.reg_w
+@22
+tb.CoreUnit.reg_id[4:0]
+tb.CoreUnit.wdata[7:0]
+tb.CoreUnit.stnext[3:0]
+@28
+tb.CoreUnit.wren
+@1000200
+-State
+@22
+tb.CoreUnit.__debug[15:0]
 [pattern_trace] 1
 [pattern_trace] 0

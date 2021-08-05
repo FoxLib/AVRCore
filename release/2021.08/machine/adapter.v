@@ -5,7 +5,10 @@ module adapter
     output  reg  [3:0]  VGA_G,
     output  reg  [3:0]  VGA_B,
     output  wire        VGA_HS,
-    output  wire        VGA_VS
+    output  wire        VGA_VS,
+
+    output  reg  [15:0] video_addr,
+    input   wire [ 7:0] video_data
 );
 
 // ---------------------------------------------------------------------
@@ -36,17 +39,28 @@ reg  [10:0] y    = 0;
 wire [10:0] X    = x - hz_back; // X=[0..639]
 wire [ 9:0] Y    = y - vt_back; // Y=[0..399]
 
+// Бинарное представление
+reg  [ 7:0] latch_data;
+
 always @(posedge CLOCK) begin
 
     // Кадровая развертка
     x <= xmax ?         0 : x + 1;
     y <= xmax ? (ymax ? 0 : y + 1) : y;
 
+    // Dummy-видеоадаптер на самом деле
+    case (X[2:0])
+
+        6: video_addr <= X[10:5] + Y[9:1]*40;
+        7: latch_data <= video_data;
+
+    endcase
+
     // Вывод окна видеоадаптера
     if (x >= hz_back && x < hz_visible + hz_back &&
         y >= vt_back && y < vt_visible + vt_back)
     begin
-         {VGA_R, VGA_G, VGA_B} <= X[3:0] == 0 || Y[3:0] == 0 ? 12'hFFF : {X[4]^Y[4], 3'h0, X[5]^Y[5], 3'h0, X[6]^Y[6], 3'h0};
+         {VGA_R, VGA_G, VGA_B} <= latch_data[ ~X[2:0] ] ? 12'hCCC : 12'h000;
     end
     else {VGA_R, VGA_G, VGA_B} <= 12'b0;
 

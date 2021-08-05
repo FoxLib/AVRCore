@@ -88,6 +88,8 @@ wire [15:0] ir;
 wire [ 7:0] i_data;
 wire [ 7:0] o_data;
 wire        we;
+wire [15:0] video_addr;
+wire [ 7:0] video_data;
 
 // ---------------------------------------------------------------------
 de0pll PLLUnit
@@ -102,7 +104,7 @@ de0pll PLLUnit
 // ---------------------------------------------------------------------
 adapter AdapterUnit
 (
-    .CLOCK      (0 && clock_25),
+    .CLOCK      (clock_25),
     .VGA_R      (VGA_R),
     .VGA_G      (VGA_G),
     .VGA_B      (VGA_B),
@@ -145,8 +147,8 @@ memory UnitMemory
     .data_a    (o_data),
     .wren_a    (we),
     // Видеопамять
-    // .address_b (address_b),
-    // .q_b       (q_b),
+    .address_b (video_addr),
+    .q_b       (video_data)
 );
 
 endmodule
