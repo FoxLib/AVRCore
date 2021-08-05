@@ -40,6 +40,7 @@ end
 core CoreUnit
 (
     .clock      (clock_25),
+    .locked     (1'b1),
     .pc         (pc),
     .ir         (ir),
     .address    (address),

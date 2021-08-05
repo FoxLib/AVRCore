@@ -102,7 +102,7 @@ de0pll PLLUnit
 // ---------------------------------------------------------------------
 adapter AdapterUnit
 (
-    .CLOCK      (clock_25),
+    .CLOCK      (0 && clock_25),
     .VGA_R      (VGA_R),
     .VGA_G      (VGA_G),
     .VGA_B      (VGA_B),
@@ -116,6 +116,7 @@ adapter AdapterUnit
 core CoreUnit
 (
     .clock      (clock_25),
+    .locked     (locked),
     .pc         (pc),
     .ir         (ir),
     .address    (address),
@@ -143,6 +144,7 @@ memory UnitMemory
     .q_a       (i_data),
     .data_a    (o_data),
     .wren_a    (we),
+    // Видеопамять
     // .address_b (address_b),
     // .q_b       (q_b),
 );
